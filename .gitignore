@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Environment — never commit secrets
+.env
+
+# Rendered output
+out/
+
+# Remotion — generated each run, not source
+remotion/props.json
+remotion/node_modules/
+remotion/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo

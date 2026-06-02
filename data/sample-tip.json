@@ -1,0 +1,39 @@
+{
+  "topic": "git stash",
+  "hook": "Stop losing work when you switch branches",
+  "audio": null,
+  "scenes": [
+    {
+      "type": "kinetic",
+      "durationInSeconds": 3,
+      "narration": "Stop losing work when you switch branches",
+      "title": "git stash",
+      "subtitle": "Save work instantly"
+    },
+    {
+      "type": "code",
+      "durationInSeconds": 5,
+      "narration": "Run git stash to shelve changes, switch branch, then git stash pop to restore",
+      "language": "bash",
+      "code": "# Shelve your current changes\ngit stash\n\n# Switch to another branch\ngit checkout main\n\n# Restore your changes\ngit stash pop"
+    },
+    {
+      "type": "ui",
+      "durationInSeconds": 4,
+      "narration": "Three simple steps: stash, switch, pop",
+      "appName": "Terminal",
+      "steps": [
+        "git stash — shelves all tracked changes",
+        "git checkout <branch> — switch freely",
+        "git stash pop — restore and continue"
+      ]
+    },
+    {
+      "type": "mascot",
+      "durationInSeconds": 3,
+      "narration": "Pro tip: name your stash with git stash push -m",
+      "emotion": "happy",
+      "message": "Pro tip: name it!\ngit stash push -m \"my feature\""
+    }
+  ]
+}

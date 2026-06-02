@@ -1,0 +1,36 @@
+export const theme = {
+  colors: {
+    bg: "#0f0f0f",
+    surface: "#1a1a2e",
+    card: "#16213e",
+    accent: "#e94560",
+    accentAlt: "#0f3460",
+    text: "#eaeaea",
+    textMuted: "#888888",
+    codeText: "#a8ff78",
+    codeBg: "#0d1117",
+    captionBg: "rgba(0,0,0,0.75)",
+  },
+  fontSizes: {
+    hook: 72,
+    title: 88,
+    subtitle: 52,
+    body: 44,
+    code: 36,
+    caption: 40,
+    step: 40,
+  },
+  fonts: {
+    display: "Inter, system-ui, sans-serif",
+    mono: "'JetBrains Mono', 'Fira Code', monospace",
+  },
+  spacing: {
+    pagePad: 60,
+    cardPad: 48,
+    gap: 32,
+  },
+  radius: {
+    card: 24,
+    bubble: 20,
+  },
+} as const;

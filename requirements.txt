@@ -1,0 +1,8 @@
+pydantic>=2.0
+python-dotenv
+fastapi
+uvicorn[standard]
+edge-tts
+
+# Optional — only required when TECHTIP_GEN_BACKEND=api
+# anthropic>=0.40.0

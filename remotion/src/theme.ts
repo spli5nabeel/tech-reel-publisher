@@ -9,6 +9,12 @@ export const theme = {
     textMuted: "#888888",
     codeText: "#a8ff78",
     codeBg: "#0d1117",
+    codeKeyword: "#79b8ff",
+    codeString: "#ffab70",
+    codeComment: "#5a6272",
+    codeNumber: "#f8c555",
+    codeOperator: "#f97583",
+    codeLineHl: "#1c2233",
     captionBg: "rgba(0,0,0,0.75)",
   },
   fontSizes: {

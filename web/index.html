@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tech-Tip Reels Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #0f0f0f; font-family: Inter, system-ui, sans-serif; color: #f3f4f6; }
+
+    .field {
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #f3f4f6;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+    .field:focus { border-color: #e94560; }
+    .field::placeholder { color: #4b5563; }
+
+    .field-icon-wrap {
+      position: relative;
+    }
+    .field-icon-wrap .field {
+      padding-left: 38px;
+    }
+    .field-icon-wrap .icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #4b5563;
+      pointer-events: none;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    label svg { flex-shrink: 0; }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .log-text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    select option { background: #1a1a2e; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #2d2d4e; border-radius: 3px; }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header style="border-bottom:1px solid #1f1f3a;padding:14px 32px;display:flex;align-items:center;gap:10px;background:#0d0d1a;">
+    <i data-lucide="clapperboard" style="color:#e94560;width:20px;height:20px;"></i>
+    <span style="font-size:15px;font-weight:700;letter-spacing:0.02em;">Tech-Tip Reels Generator</span>
+  </header>
+
+  <!-- Main -->
+  <main style="max-width:1200px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
+
+    <!-- ── LEFT: Parameters + Log ── -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+          <i data-lucide="sliders-horizontal" style="width:15px;height:15px;color:#6b7280;"></i>
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Parameters</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- Topic -->
+          <div>
+            <label>
+              <i data-lucide="lightbulb" style="width:13px;height:13px;"></i>
+              Topic <span style="color:#e94560;margin-left:2px;">*</span>
+            </label>
+            <div class="field-icon-wrap">
+              <i data-lucide="type" class="icon" style="width:15px;height:15px;"></i>
+              <input id="topic" type="text" class="field" placeholder="e.g. git stash for work in progress" required />
+            </div>
+          </div>
+
+          <!-- Background animation -->
+          <div>
+            <label>
+              <i data-lucide="sparkles" style="width:13px;height:13px;"></i>
+              Background Animation
+            </label>
+            <div class="field-icon-wrap">
+              <i data-lucide="wand-2" class="icon" style="width:15px;height:15px;"></i>
+              <select id="bg" class="field" style="cursor:pointer;">
+                <option value="random">Random (derived from topic)</option>
+                <option value="particles">Particles</option>
+                <option value="gradient">Gradient</option>
+                <option value="grid">Grid</option>
+                <option value="shapes">Shapes</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Background colour -->
+          <div>
+            <label>
+              <i data-lucide="palette" style="width:13px;height:13px;"></i>
+              Background Colour
+            </label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="bg-color" type="color" value="#0f0f0f"
+                style="width:42px;height:42px;border-radius:10px;border:1px solid #2d2d4e;
+                       background:#1a1a2e;padding:4px;cursor:pointer;flex-shrink:0;" />
+              <div class="field-icon-wrap" style="flex:1;">
+                <i data-lucide="hash" class="icon" style="width:14px;height:14px;"></i>
+                <input id="bg-color-hex" type="text" value="#0f0f0f" maxlength="7"
+                  class="field" style="font-family:monospace;" />
+              </div>
+              <button type="button" id="color-reset"
+                style="flex-shrink:0;display:flex;align-items:center;gap:6px;padding:10px 14px;
+                       background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;
+                       color:#9ca3af;font-size:13px;cursor:pointer;transition:color 0.15s;white-space:nowrap;"
+                onmouseover="this.style.color='#f3f4f6'" onmouseout="this.style.color='#9ca3af'">
+                <i data-lucide="rotate-ccw" style="width:13px;height:13px;"></i>
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- TTS toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:10px;background:#16213e;
+                          border:1px solid #2d2d4e;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="mic" style="width:16px;height:16px;color:#9ca3af;"></i>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:500;color:#e5e7eb;">TTS Narration</div>
+                <div style="font-size:12px;color:#6b7280;margin-top:1px;">Synthesise voice using edge-tts</div>
+              </div>
+            </div>
+            <button type="button" id="tts-toggle" role="switch" aria-checked="false"
+              onclick="toggleTts()"
+              style="width:48px;height:26px;border-radius:13px;background:#374151;border:none;
+                     cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;">
+              <span id="tts-knob"
+                style="position:absolute;top:3px;left:3px;width:20px;height:20px;
+                       border-radius:50%;background:white;transition:transform 0.2s;
+                       box-shadow:0 1px 3px rgba(0,0,0,0.4);">
+              </span>
+            </button>
+          </div>
+
+          <!-- Voice -->
+          <div id="voice-row" style="opacity:0.4;pointer-events:none;transition:opacity 0.2s;">
+            <label>
+              <i data-lucide="user-round" style="width:13px;height:13px;"></i>
+              Voice
+            </label>
+            <div class="field-icon-wrap">
+              <i data-lucide="headphones" class="icon" style="width:15px;height:15px;"></i>
+              <select id="voice" class="field" style="cursor:pointer;">
+                <option value="">Loading voices...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Output filename -->
+          <div>
+            <label>
+              <i data-lucide="file-video" style="width:13px;height:13px;"></i>
+              Output Filename
+            </label>
+            <div class="field-icon-wrap">
+              <i data-lucide="folder" class="icon" style="width:15px;height:15px;"></i>
+              <input id="out" type="text" value="video.mp4" class="field" style="font-family:monospace;" />
+            </div>
+          </div>
+
+          <!-- Generate button -->
+          <button id="btn" type="button" onclick="submitForm()"
+            style="width:100%;padding:13px;background:#e94560;border:none;border-radius:10px;
+                   color:white;font-size:14px;font-weight:600;cursor:pointer;
+                   transition:background 0.15s;margin-top:4px;display:flex;
+                   align-items:center;justify-content:center;gap:8px;"
+            onmouseover="if(!this.disabled)this.style.background='#c73652'"
+            onmouseout="if(!this.disabled)this.style.background='#e94560'">
+            <i data-lucide="play" style="width:16px;height:16px;fill:white;stroke:white;"></i>
+            Generate Video
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Log card -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding:12px 20px;border-bottom:1px solid #2d2d4e;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i data-lucide="terminal" style="width:14px;height:14px;color:#6b7280;"></i>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Log Output</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:#374151;"></div>
+            <span id="status-badge" style="display:none;font-size:11px;font-weight:600;padding:2px 10px;border-radius:999px;"></span>
+          </div>
+        </div>
+        <pre id="log" class="log-text"
+          style="font-size:12px;color:#6b7280;padding:16px 20px;margin:0;
+                 overflow-y:auto;max-height:220px;white-space:pre-wrap;line-height:1.7;">Waiting to start...</pre>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: Preview ── -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+
+      <div style="display:flex;align-items:center;gap:8px;align-self:flex-start;">
+        <i data-lucide="monitor-play" style="width:15px;height:15px;color:#6b7280;"></i>
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Preview</span>
+      </div>
+
+      <!-- 9:16 frame -->
+      <div style="width:100%;max-width:300px;">
+        <div style="aspect-ratio:9/16;border-radius:20px;overflow:hidden;
+                    border:1px solid #2d2d4e;background:#1a1a2e;position:relative;">
+
+          <!-- Placeholder -->
+          <div id="placeholder"
+            style="position:absolute;inset:0;display:flex;flex-direction:column;
+                   align-items:center;justify-content:center;gap:14px;color:#374151;">
+            <i data-lucide="video" style="width:44px;height:44px;stroke-width:1;"></i>
+            <span style="font-size:12px;text-align:center;line-height:1.6;">
+              Your video will<br/>appear here
+            </span>
+          </div>
+
+          <!-- Video -->
+          <video id="preview-video"
+            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;"
+            controls loop>
+          </video>
+        </div>
+
+        <!-- Download -->
+        <a id="download-btn"
+          style="display:none;margin-top:14px;width:100%;padding:12px 16px;
+                 background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;
+                 color:#d1d5db;font-size:13px;font-weight:600;text-align:center;
+                 cursor:pointer;text-decoration:none;transition:background 0.15s;
+                 align-items:center;justify-content:center;gap:8px;"
+          onmouseover="this.style.background='#16213e'"
+          onmouseout="this.style.background='#1a1a2e'">
+          <i data-lucide="download" style="width:15px;height:15px;display:inline;vertical-align:middle;margin-right:6px;"></i>
+          Download MP4
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Init Lucide icons
+    lucide.createIcons();
+
+    let jobId = null, timer = null, ttsOn = false;
+
+    function toggleTts() {
+      ttsOn = !ttsOn;
+      document.getElementById('tts-toggle').style.background = ttsOn ? '#e94560' : '#374151';
+      document.getElementById('tts-knob').style.transform = ttsOn ? 'translateX(22px)' : '';
+      const row = document.getElementById('voice-row');
+      row.style.opacity = ttsOn ? '1' : '0.4';
+      row.style.pointerEvents = ttsOn ? 'auto' : 'none';
+    }
+
+    document.getElementById('bg-color').addEventListener('input', e => {
+      document.getElementById('bg-color-hex').value = e.target.value;
+    });
+    document.getElementById('bg-color-hex').addEventListener('input', e => {
+      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value))
+        document.getElementById('bg-color').value = e.target.value;
+    });
+    document.getElementById('color-reset').addEventListener('click', () => {
+      document.getElementById('bg-color').value = '#0f0f0f';
+      document.getElementById('bg-color-hex').value = '#0f0f0f';
+    });
+
+    async function loadVoices() {
+      try {
+        const voices = await (await fetch('/voices')).json();
+        const sel = document.getElementById('voice');
+        sel.innerHTML = voices.map(v =>
+          `<option value="${v}"${v === 'en-US-EricNeural' ? ' selected' : ''}>${v}</option>`
+        ).join('');
+      } catch {}
+    }
+
+    async function submitForm() {
+      const topic = document.getElementById('topic').value.trim();
+      if (!topic) { document.getElementById('topic').focus(); return; }
+
+      setBusy(true); resetPreview(); setLog('Starting...'); setDot('#facc15'); hideBadge();
+
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            bg:       document.getElementById('bg').value,
+            bg_color: document.getElementById('bg-color-hex').value,
+            tts:      ttsOn,
+            voice:    ttsOn ? document.getElementById('voice').value : null,
+            out:      document.getElementById('out').value || 'video.mp4',
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setLog('Error: ' + (data.detail || 'Unknown')); setBusy(false); setDot('#f87171'); return; }
+        jobId = data.job_id;
+        timer = setInterval(poll, 2000);
+      } catch (err) {
+        setLog('Network error: ' + err.message); setBusy(false); setDot('#f87171');
+      }
+    }
+
+    async function poll() {
+      try {
+        const data = await (await fetch(`/status/${jobId}`)).json();
+        setLog(data.log || '');
+        if (data.status === 'done') {
+          clearInterval(timer); setBusy(false);
+          setDot('#4ade80'); setBadge('Done', '#14532d', '#86efac'); showVideo(jobId);
+        } else if (data.status === 'error') {
+          clearInterval(timer); setBusy(false);
+          setDot('#f87171'); setBadge('Error', '#450a0a', '#fca5a5');
+        } else {
+          setBadge('Running', '#451a03', '#fcd34d');
+        }
+      } catch {}
+    }
+
+    function setBusy(on) {
+      const btn = document.getElementById('btn');
+      btn.disabled = on;
+      btn.style.opacity = on ? '0.7' : '1';
+      btn.style.cursor = on ? 'not-allowed' : 'pointer';
+      btn.innerHTML = on
+        ? '<span class="spinner"></span>Generating...'
+        : '<i data-lucide="play" style="width:16px;height:16px;fill:white;stroke:white;display:inline;vertical-align:middle;margin-right:6px;"></i>Generate Video';
+      if (!on) lucide.createIcons();
+    }
+    function setLog(t) { const el = document.getElementById('log'); el.textContent = t; el.scrollTop = el.scrollHeight; }
+    function setDot(c) { document.getElementById('status-dot').style.background = c; }
+    function setBadge(l, bg, c) { const b = document.getElementById('status-badge'); b.textContent = l; b.style.background = bg; b.style.color = c; b.style.display = 'inline-block'; }
+    function hideBadge() { document.getElementById('status-badge').style.display = 'none'; }
+    function showVideo(id) {
+      const vid = document.getElementById('preview-video');
+      const dl  = document.getElementById('download-btn');
+      vid.src = `/video/${id}?t=${Date.now()}`;
+      vid.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+      dl.href = `/video/${id}`;
+      dl.download = document.getElementById('out').value || 'video.mp4';
+      dl.style.display = 'flex';
+    }
+    function resetPreview() {
+      document.getElementById('preview-video').style.display = 'none';
+      document.getElementById('preview-video').src = '';
+      document.getElementById('placeholder').style.display = 'flex';
+      document.getElementById('download-btn').style.display = 'none';
+    }
+
+    loadVoices();
+  </script>
+
+</body>
+</html>

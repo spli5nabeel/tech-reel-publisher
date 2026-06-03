@@ -1,18 +1,22 @@
 import React from "react";
+import { Audio, staticFile } from "remotion";
 import { Scene } from "./types";
 import { KineticText } from "./scenes/KineticText";
 import { CodeSnippet } from "./scenes/CodeSnippet";
 import { UIMockup } from "./scenes/UIMockup";
 import { Mascot } from "./scenes/Mascot";
 import { CaptionBar } from "./CaptionBar";
+import { Background, BgStyle } from "./Background";
 import { theme } from "./theme";
 
 interface Props {
   scene: Scene;
   durationInFrames: number;
+  bgStyle: BgStyle;
+  bgColor: string;
 }
 
-export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames }) => {
+export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames, bgStyle, bgColor }) => {
   let content: React.ReactNode;
 
   switch (scene.type) {
@@ -37,11 +41,13 @@ export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames }) => {
       style={{
         width: 1080,
         height: 1920,
-        backgroundColor: theme.colors.bg,
+        backgroundColor: bgColor,
         position: "relative",
         overflow: "hidden",
       }}
     >
+      <Background style={bgStyle} />
+      {scene.audioSrc && <Audio src={staticFile(scene.audioSrc)} volume={1} />}
       {content}
       {scene.narration && (
         <CaptionBar

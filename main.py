@@ -18,9 +18,39 @@ def main() -> None:
         default="out/video.mp4",
         help="Output path for the rendered MP4 (default: out/video.mp4)",
     )
+    parser.add_argument(
+        "--bg",
+        choices=["particles", "gradient", "grid", "shapes", "random"],
+        default="random",
+        help="Background animation style (default: random — derived from topic)",
+    )
+    parser.add_argument(
+        "--color",
+        default=None,
+        metavar="#RRGGBB",
+        help="Background colour as hex (e.g. --color '#1a0a2e'). Default: #0f0f0f",
+    )
+    parser.add_argument(
+        "--tts",
+        action="store_true",
+        help="Synthesise narration audio with edge-tts",
+    )
+    parser.add_argument(
+        "--voice",
+        default=None,
+        help="edge-tts voice name (default: en-US-EricNeural or TECHTIP_TTS_VOICE env var)",
+    )
     args = parser.parse_args()
 
-    out_path = run(args.topic, Path(args.out))
+    bg_style = None if args.bg == "random" else args.bg
+    out_path = run(
+        args.topic,
+        Path(args.out),
+        bg_style=bg_style,
+        bg_color=args.color,
+        tts=args.tts,
+        voice=args.voice,
+    )
     print(f"Rendered: {out_path}")
 
 

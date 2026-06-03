@@ -23,7 +23,7 @@ export const CaptionBar: React.FC<Props> = ({ narration, durationInFrames }) => 
     <div
       style={{
         position: "absolute",
-        bottom: 80,
+        bottom: 380,
         left: theme.spacing.pagePad,
         right: theme.spacing.pagePad,
         backgroundColor: theme.colors.captionBg,

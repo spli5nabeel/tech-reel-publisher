@@ -71,6 +71,12 @@ Scene = Annotated[
 BgStyle = Literal["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain"]
 
 
+class YouTubeMeta(_Base):
+    title: str
+    description: str
+    hashtags: list[str]
+
+
 class Tip(_Base):
     topic: str
     hook: str
@@ -79,4 +85,5 @@ class Tip(_Base):
     bg_color: str | None = None
     caption_speed: float = 1.0
     transition: str = "fade"
+    youtube: Optional[YouTubeMeta] = None
     scenes: list[Scene]

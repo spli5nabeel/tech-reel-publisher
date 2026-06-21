@@ -17,6 +17,11 @@ The JSON must match this exact structure:
   "topic": "<string>",
   "hook": "<one-line hook — max 8 words>",
   "audio": null,
+  "youtube": {
+    "title": "<punchy YouTube Shorts title, 50-70 chars, no clickbait>",
+    "description": "<2-3 sentences covering what viewers will learn, good for SEO>",
+    "hashtags": ["#TechTips", "#Coding", "<3-5 more topic-specific tags>"]
+  },
   "scenes": [<Scene>, ...]
 }
 
@@ -89,6 +94,7 @@ def _generate_cli(topic: str, target_seconds: int = 45) -> Tip:
         "--append-system-prompt", SYSTEM,
         "--output-format", "json",
         "--max-turns", "1",
+        "--no-tools",
     ]
     try:
         result = subprocess.run(
@@ -97,7 +103,7 @@ def _generate_cli(topic: str, target_seconds: int = 45) -> Tip:
             text=True,
             encoding="utf-8",
             check=True,
-            timeout=180,
+            timeout=300,
             shell=(sys.platform == "win32"),
         )
     except subprocess.CalledProcessError as exc:

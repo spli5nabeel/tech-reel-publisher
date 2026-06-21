@@ -20,7 +20,7 @@ def run(
     caption_speed: float = 1.0,
     transition: str = "fade",
     log=print,
-) -> Path:
+) -> tuple[Path, dict | None]:
     log(f"Generating script for: {topic}")
     tip: Tip = generate_tip(topic, target_seconds=duration)
     log(f"Script ready — {len(tip.scenes)} scenes, "
@@ -38,4 +38,6 @@ def run(
 
     log("Rendering video (this takes 1-2 minutes)...")
     render_tip(tip, out_path, bg_style=bg_style, bg_color=bg_color)
-    return out_path
+
+    youtube = tip.youtube.model_dump(by_alias=True) if tip.youtube else None
+    return out_path, youtube

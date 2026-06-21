@@ -179,14 +179,16 @@ select.field{
 
 /* ── Preview pane ────────────────────────────────────────────── */
 .preview{
-  display:flex;flex-direction:column;align-items:center;
+  display:flex;flex-direction:column;align-items:stretch;
   overflow:hidden;background:var(--bg);
   gap:0;
 }
 .preview-top{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:24px;gap:20px;min-height:0;
+  flex:1;display:flex;flex-direction:row;align-items:flex-start;
+  justify-content:center;padding:24px;gap:32px;min-height:0;
+  overflow-y:auto;
 }
+.phone-col{display:flex;flex-direction:column;align-items:center;gap:20px;flex-shrink:0}
 
 /* Phone frame */
 .phone-wrap{position:relative;flex-shrink:0}
@@ -283,6 +285,51 @@ select.field{
 .log-line.ok{color:var(--success)}
 .log-line.err{color:var(--error)}
 .log-line.step{color:var(--text)}
+
+/* ── YouTube meta panel ──────────────────────────────────────── */
+.meta-panel{
+  display:none;flex-direction:column;gap:14px;
+  width:320px;flex-shrink:0;padding-top:4px;
+}
+.meta-panel.visible{display:flex}
+.meta-heading{
+  font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:2px;
+}
+.meta-heading::after{content:'';flex:1;height:1px;background:var(--border)}
+.meta-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.meta-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.meta-card-label{
+  font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--muted);
+}
+.meta-card-value{font-size:13px;line-height:1.65;color:var(--text);word-break:break-word}
+.copy-btn{
+  padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);
+  font-family:inherit;font-size:11px;font-weight:600;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.copy-btn:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+.copy-btn.copied{color:var(--success);border-color:var(--success);background:rgba(34,197,94,.08)}
+.hashtag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.hashtag{
+  font-size:12px;font-weight:600;color:var(--accent);
+  background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);
+  border-radius:99px;padding:3px 11px;
+}
+.meta-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:40px 20px;text-align:center;
+  color:rgba(255,255,255,.12);
+}
+.meta-placeholder svg{opacity:.3}
+.meta-placeholder p{font-size:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -414,47 +461,94 @@ select.field{
     <main class="preview">
 
       <div class="preview-top">
-        <!-- Status -->
-        <div class="status-strip" id="status-strip">
-          <div class="status-dot" id="status-dot"></div>
-          <span id="status-text">Ready</span>
-        </div>
 
-        <!-- Phone frame -->
-        <div class="phone-wrap">
-          <div class="phone-frame" id="phone-frame">
-            <div class="phone-notch"></div>
-            <div class="phone-placeholder" id="phone-placeholder">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="2" y="2" width="20" height="20" rx="4"/>
-                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
-              </svg>
-              <p>Your video will<br>appear here</p>
-            </div>
-            <video id="preview-video" style="display:none" autoplay loop muted playsinline></video>
+        <!-- Left: phone column -->
+        <div class="phone-col">
+          <!-- Status -->
+          <div class="status-strip" id="status-strip">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Ready</span>
           </div>
+
+          <!-- Phone frame -->
+          <div class="phone-wrap">
+            <div class="phone-frame" id="phone-frame">
+              <div class="phone-notch"></div>
+              <div class="phone-placeholder" id="phone-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="2" y="2" width="20" height="20" rx="4"/>
+                  <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+                </svg>
+                <p>Your video will<br>appear here</p>
+              </div>
+              <video id="preview-video" style="display:none" autoplay loop muted playsinline></video>
+            </div>
+          </div>
+
+          <!-- Video controls -->
+          <div class="video-controls" id="video-controls">
+            <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" title="Mute / Unmute">
+              <svg id="icon-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              <svg id="icon-sound" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </button>
+          </div>
+
+          <!-- Download -->
+          <button class="btn-download" id="download-btn" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download MP4
+          </button>
         </div>
 
-        <!-- Video controls -->
-        <div class="video-controls" id="video-controls">
-          <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
-          </button>
-          <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" title="Mute / Unmute">
-            <svg id="icon-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-            <svg id="icon-sound" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <!-- Right: YouTube metadata panel -->
+        <div class="meta-panel" id="meta-panel">
+          <div class="meta-heading">YouTube Shorts</div>
+
+          <!-- Title -->
+          <div class="meta-card">
+            <div class="meta-card-hdr">
+              <span class="meta-card-label">Title</span>
+              <button class="copy-btn" id="copy-title" onclick="copyField('meta-title','copy-title')">Copy</button>
+            </div>
+            <div class="meta-card-value" id="meta-title"></div>
+          </div>
+
+          <!-- Description -->
+          <div class="meta-card">
+            <div class="meta-card-hdr">
+              <span class="meta-card-label">Description</span>
+              <button class="copy-btn" id="copy-desc" onclick="copyField('meta-desc','copy-desc')">Copy</button>
+            </div>
+            <div class="meta-card-value" id="meta-desc"></div>
+          </div>
+
+          <!-- Hashtags -->
+          <div class="meta-card">
+            <div class="meta-card-hdr">
+              <span class="meta-card-label">Hashtags</span>
+              <button class="copy-btn" id="copy-tags" onclick="copyHashtags('copy-tags')">Copy all</button>
+            </div>
+            <div class="hashtag-list" id="meta-tags"></div>
+          </div>
+
+          <!-- Export button -->
+          <button class="btn-download" id="export-btn" onclick="exportMeta()" style="width:100%;justify-content:center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export to File
           </button>
         </div>
 
-        <!-- Download -->
-        <button class="btn-download" id="download-btn" disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Download MP4
-        </button>
       </div>
 
       <!-- Log -->
@@ -473,12 +567,13 @@ select.field{
 </div>
 
 <script>
-  let jobId     = null;
-  let timer     = null;
-  let audioMode = 'voice';  // 'voice' | 'music'
-  let duration  = 45;
-  let dlUrl     = null;
-  let lastStatus = null;
+  let jobId        = null;
+  let timer        = null;
+  let audioMode    = 'voice';  // 'voice' | 'music'
+  let duration     = 45;
+  let dlUrl        = null;
+  let lastStatus   = null;
+  let currentTags  = [];
 
   /* ── Duration pills ────────────────────────────────────── */
   function setDuration(s) {
@@ -566,6 +661,7 @@ select.field{
     document.getElementById('download-btn').disabled = true;
     document.getElementById('preview-video').style.display = 'none';
     document.getElementById('phone-placeholder').style.display = 'flex';
+    document.getElementById('meta-panel').classList.remove('visible');
 
     try {
       const res  = await fetch('/generate', {
@@ -611,6 +707,7 @@ select.field{
         setBusy(false);
         setStatus('done', 'Done');
         showVideo(jobId);
+        showMeta(data.meta);
       } else if (data.status === 'error') {
         clearInterval(timer);
         setBusy(false);
@@ -707,6 +804,49 @@ select.field{
     const vid = document.getElementById('preview-video');
     document.getElementById('icon-muted').style.display = vid.muted ? '' : 'none';
     document.getElementById('icon-sound').style.display = vid.muted ? 'none' : '';
+  }
+
+  /* ── YouTube meta panel ─────────────────────────────────── */
+  function showMeta(meta) {
+    if (!meta) return;
+    document.getElementById('meta-title').textContent = meta.title || '';
+    document.getElementById('meta-desc').textContent  = meta.description || '';
+
+    currentTags = meta.hashtags || [];
+    document.getElementById('meta-tags').innerHTML =
+      currentTags.map(t => `<span class="hashtag">${escHtml(t)}</span>`).join('');
+
+    document.getElementById('meta-panel').classList.add('visible');
+  }
+
+  function copyField(fieldId, btnId) {
+    const text = document.getElementById(fieldId).textContent;
+    navigator.clipboard.writeText(text).then(() => flashCopy(btnId, 'Copy'));
+  }
+
+  function copyHashtags(btnId) {
+    navigator.clipboard.writeText(currentTags.join(' ')).then(() => flashCopy(btnId, 'Copy all'));
+  }
+
+  function exportMeta() {
+    const title = document.getElementById('meta-title').textContent;
+    const desc  = document.getElementById('meta-desc').textContent;
+    const tags  = currentTags.join(' ');
+    const content = `TITLE\n${'─'.repeat(60)}\n${title}\n\nDESCRIPTION\n${'─'.repeat(60)}\n${desc}\n\nHASHTAGS\n${'─'.repeat(60)}\n${tags}\n`;
+    const blob  = new Blob([content], { type: 'text/plain' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href      = url;
+    a.download  = (title.slice(0, 40).replace(/[^a-z0-9]+/gi, '_').toLowerCase() || 'meta') + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function flashCopy(btnId, resetLabel) {
+    const btn = document.getElementById(btnId);
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = resetLabel; btn.classList.remove('copied'); }, 2000);
   }
 
   /* ── Init ───────────────────────────────────────────────── */

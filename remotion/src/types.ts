@@ -57,6 +57,12 @@ export const SceneSchema = z.discriminatedUnion("type", [
 export const BG_STYLES = ["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain"] as const;
 export type BgStyle = (typeof BG_STYLES)[number];
 
+export const YouTubeMetaSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  hashtags: z.array(z.string()),
+});
+
 export const TipSchema = z.object({
   topic: z.string(),
   hook: z.string(),
@@ -65,6 +71,7 @@ export const TipSchema = z.object({
   bgColor: z.string().optional(),
   captionSpeed: z.number().default(1.0),
   transition: z.enum(["fade", "slide-left", "zoom", "none"]).default("fade"),
+  youtube: YouTubeMetaSchema.optional(),
   scenes: z.array(SceneSchema),
 });
 

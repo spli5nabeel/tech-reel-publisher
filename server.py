@@ -30,6 +30,7 @@ class Job:
     status: str = "running"
     log: list = field(default_factory=list)
     out_path: Optional[Path] = None
+    meta: Optional[dict] = None
 
 
 jobs: dict[str, Job] = {}
@@ -63,7 +64,7 @@ def _run_job(job: Job, req: GenerateRequest) -> None:
         out_path = OUT_DIR / f"{job.id}_{out_filename}"
         bg_style = None if req.bg == "random" else req.bg
 
-        result = pipeline_run(
+        result, youtube = pipeline_run(
             topic=req.topic,
             out_path=out_path,
             bg_style=bg_style,
@@ -78,6 +79,7 @@ def _run_job(job: Job, req: GenerateRequest) -> None:
         )
 
         job.out_path = result
+        job.meta = youtube
         job.status = "done"
         log(f"Done — {result.name}")
     except Exception as exc:
@@ -112,6 +114,7 @@ async def status(job_id: str):
     return {
         "status": job.status,
         "log": "\n".join(job.log[-60:]),
+        "meta": job.meta,
     }
 
 

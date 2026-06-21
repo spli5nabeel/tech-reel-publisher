@@ -16,11 +16,18 @@ class _Base(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 
+class WordTiming(_Base):
+    word: str
+    start: float  # seconds from scene start
+    end: float    # seconds from scene start
+
+
 class KineticScene(_Base):
     type: Literal["kinetic"] = "kinetic"
     duration_in_seconds: float
     narration: str = ""
     audio_src: str | None = None
+    word_timings: list[WordTiming] | None = None
     title: str
     subtitle: str = ""
 
@@ -30,6 +37,7 @@ class CodeScene(_Base):
     duration_in_seconds: float
     narration: str = ""
     audio_src: str | None = None
+    word_timings: list[WordTiming] | None = None
     language: str
     code: str
 
@@ -39,6 +47,7 @@ class UIScene(_Base):
     duration_in_seconds: float
     narration: str = ""
     audio_src: str | None = None
+    word_timings: list[WordTiming] | None = None
     app_name: str
     steps: list[str]
 
@@ -48,6 +57,7 @@ class MascotScene(_Base):
     duration_in_seconds: float
     narration: str = ""
     audio_src: str | None = None
+    word_timings: list[WordTiming] | None = None
     emotion: str
     message: str
 

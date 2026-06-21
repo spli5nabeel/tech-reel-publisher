@@ -1,0 +1,126 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - img [ref=e3]
+    - generic [ref=e8]: Tech-Tip Reels Generator
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - img [ref=e13]
+          - generic [ref=e14]: Parameters
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]:
+              - img [ref=e18]
+              - text: Topic
+              - generic [ref=e20]: "*"
+            - generic [ref=e21]:
+              - img
+              - textbox "e.g. git stash for work in progress" [ref=e22]: Python list comprehensions
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - img [ref=e25]
+              - text: Background Animation
+            - generic [ref=e28]:
+              - img
+              - combobox [ref=e29] [cursor=pointer]:
+                - option "Random (derived from topic)" [selected]
+                - option "Particles"
+                - option "Gradient"
+                - option "Grid"
+                - option "Shapes"
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - img [ref=e32]
+              - text: Background Colour
+            - generic [ref=e38]:
+              - textbox [ref=e39] [cursor=pointer]: "#0f0f0f"
+              - generic [ref=e40]:
+                - img
+                - textbox [ref=e41]: "#0f0f0f"
+              - button "Reset" [ref=e42] [cursor=pointer]:
+                - img [ref=e43]
+                - text: Reset
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - img [ref=e49]
+              - generic [ref=e52]:
+                - generic [ref=e53]: TTS Narration
+                - generic [ref=e54]: Synthesise voice using edge-tts
+            - switch [ref=e55] [cursor=pointer]
+          - generic:
+            - generic:
+              - img
+              - text: Voice
+            - generic:
+              - img
+              - combobox:
+                - option "en-AU-NatashaNeural"
+                - option "en-AU-WilliamMultilingualNeural"
+                - option "en-CA-ClaraNeural"
+                - option "en-CA-LiamNeural"
+                - option "en-GB-LibbyNeural"
+                - option "en-GB-MaisieNeural"
+                - option "en-GB-RyanNeural"
+                - option "en-GB-SoniaNeural"
+                - option "en-GB-ThomasNeural"
+                - option "en-HK-SamNeural"
+                - option "en-HK-YanNeural"
+                - option "en-IE-ConnorNeural"
+                - option "en-IE-EmilyNeural"
+                - option "en-IN-NeerjaExpressiveNeural"
+                - option "en-IN-NeerjaNeural"
+                - option "en-IN-PrabhatNeural"
+                - option "en-KE-AsiliaNeural"
+                - option "en-KE-ChilembaNeural"
+                - option "en-NG-AbeoNeural"
+                - option "en-NG-EzinneNeural"
+                - option "en-NZ-MitchellNeural"
+                - option "en-NZ-MollyNeural"
+                - option "en-PH-JamesNeural"
+                - option "en-PH-RosaNeural"
+                - option "en-SG-LunaNeural"
+                - option "en-SG-WayneNeural"
+                - option "en-TZ-ElimuNeural"
+                - option "en-TZ-ImaniNeural"
+                - option "en-US-AnaNeural"
+                - option "en-US-AndrewMultilingualNeural"
+                - option "en-US-AndrewNeural"
+                - option "en-US-AriaNeural"
+                - option "en-US-AvaMultilingualNeural"
+                - option "en-US-AvaNeural"
+                - option "en-US-BrianMultilingualNeural"
+                - option "en-US-BrianNeural"
+                - option "en-US-ChristopherNeural"
+                - option "en-US-EmmaMultilingualNeural"
+                - option "en-US-EmmaNeural"
+                - option "en-US-EricNeural" [selected]
+                - option "en-US-GuyNeural"
+                - option "en-US-JennyNeural"
+                - option "en-US-MichelleNeural"
+                - option "en-US-RogerNeural"
+                - option "en-US-SteffanNeural"
+                - option "en-ZA-LeahNeural"
+                - option "en-ZA-LukeNeural"
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - img [ref=e59]
+              - text: Output Filename
+            - generic [ref=e63]:
+              - img
+              - textbox [ref=e64]: video.mp4
+          - button "Generating..." [disabled] [ref=e90]: Generating...
+      - generic [ref=e68]:
+        - generic [ref=e70]:
+          - img [ref=e71]
+          - generic [ref=e73]: Log Output
+        - generic [ref=e76]: Starting...
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - img [ref=e79]
+        - generic [ref=e82]: Preview
+      - generic [ref=e85]:
+        - img [ref=e86]
+        - generic [ref=e89]:
+          - text: Your video will
+          - text: appear here

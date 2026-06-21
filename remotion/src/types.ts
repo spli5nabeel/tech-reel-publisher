@@ -1,10 +1,18 @@
 import { z } from "zod";
 
+export const WordTimingSchema = z.object({
+  word: z.string(),
+  start: z.number(),
+  end: z.number(),
+});
+export type WordTiming = z.infer<typeof WordTimingSchema>;
+
 export const KineticSceneSchema = z.object({
   type: z.literal("kinetic"),
   durationInSeconds: z.number(),
   narration: z.string().default(""),
   audioSrc: z.string().nullable().optional(),
+  wordTimings: z.array(WordTimingSchema).nullable().optional(),
   title: z.string(),
   subtitle: z.string().default(""),
 });
@@ -14,6 +22,7 @@ export const CodeSceneSchema = z.object({
   durationInSeconds: z.number(),
   narration: z.string().default(""),
   audioSrc: z.string().nullable().optional(),
+  wordTimings: z.array(WordTimingSchema).nullable().optional(),
   language: z.string(),
   code: z.string(),
 });
@@ -23,6 +32,7 @@ export const UISceneSchema = z.object({
   durationInSeconds: z.number(),
   narration: z.string().default(""),
   audioSrc: z.string().nullable().optional(),
+  wordTimings: z.array(WordTimingSchema).nullable().optional(),
   appName: z.string(),
   steps: z.array(z.string()),
 });
@@ -32,6 +42,7 @@ export const MascotSceneSchema = z.object({
   durationInSeconds: z.number(),
   narration: z.string().default(""),
   audioSrc: z.string().nullable().optional(),
+  wordTimings: z.array(WordTimingSchema).nullable().optional(),
   emotion: z.string(),
   message: z.string(),
 });

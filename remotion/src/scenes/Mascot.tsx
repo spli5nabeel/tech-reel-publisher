@@ -1,5 +1,5 @@
 import React from "react";
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { MascotScene } from "../types";
 import { theme } from "../theme";
 
@@ -8,28 +8,46 @@ interface Props {
   durationInFrames: number;
 }
 
-export const Mascot: React.FC<Props> = ({ scene }) => {
+export const Mascot: React.FC<Props> = ({ scene, durationInFrames }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const bobY = Math.sin(frame / 10) * 18;
+  // Card scales up from centre
+  const cardScale = spring({ frame, fps, config: { stiffness: 55, damping: 16 }, from: 0.8, to: 1 });
+  const cardOp    = spring({ frame, fps, config: { stiffness: 55, damping: 16 }, from: 0,   to: 1 });
 
-  const bubbleOpacity = spring({
-    frame: Math.max(0, frame - 5),
+  // Message text word-by-word
+  const words = scene.message.split(" ");
+  const WORD_DELAY = 5;
+
+  // Emoji / icon bounces in after card
+  const iconDelay = 8;
+  const iconScale = spring({
+    frame: Math.max(0, frame - iconDelay),
     fps,
-    config: { damping: 12 },
+    config: { stiffness: 80, damping: 10 },
     from: 0,
     to: 1,
   });
-  const bubbleScale = spring({
-    frame: Math.max(0, frame - 5),
+
+  // CTA button pulses
+  const btnDelay = words.length * WORD_DELAY + 14;
+  const btnOp = spring({
+    frame: Math.max(0, frame - btnDelay),
     fps,
-    config: { damping: 12 },
-    from: 0.7,
+    config: { stiffness: 50, damping: 14 },
+    from: 0,
     to: 1,
   });
+  const btnScale = 1 + Math.sin(frame / 14) * 0.025;
 
-  const happy = scene.emotion === "happy";
+  // Fade out
+  const fadeOut = interpolate(frame, [durationInFrames - 12, durationInFrames - 2], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  const emoji = scene.emotion === "happy" ? "🚀" : scene.emotion === "excited" ? "⚡" : "💡";
 
   return (
     <div
@@ -40,74 +58,101 @@ export const Mascot: React.FC<Props> = ({ scene }) => {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 48,
         padding: theme.spacing.pagePad,
+        gap: 48,
+        opacity: fadeOut,
       }}
     >
-      {/* Speech bubble */}
+      {/* Glowing emoji icon */}
       <div
         style={{
-          maxWidth: 820,
-          backgroundColor: "white",
-          borderRadius: theme.radius.bubble,
-          padding: "40px 56px",
-          position: "relative",
-          opacity: bubbleOpacity,
-          transform: `scale(${bubbleScale})`,
+          fontSize: 96,
+          transform: `scale(${iconScale})`,
+          filter: `drop-shadow(0 0 32px ${theme.colors.accentGlow})`,
+          lineHeight: 1,
         }}
       >
-        <span
-          style={{
-            fontFamily: theme.fonts.display,
-            fontSize: theme.fontSizes.body,
-            color: "#111",
-            fontWeight: 600,
-            lineHeight: 1.4,
-          }}
-        >
-          {scene.message}
-        </span>
-        {/* Tail */}
+        {emoji}
+      </div>
+
+      {/* Message card */}
+      <div
+        style={{
+          width: "100%",
+          background: theme.colors.card,
+          border: `1px solid ${theme.colors.border}`,
+          borderRadius: 32,
+          padding: "52px 56px",
+          transform: `scale(${cardScale})`,
+          opacity: cardOp,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Gradient accent stripe */}
         <div
           style={{
             position: "absolute",
-            bottom: -28,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 0,
-            height: 0,
-            borderLeft: "20px solid transparent",
-            borderRight: "20px solid transparent",
-            borderTop: "30px solid white",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: `linear-gradient(90deg, ${theme.colors.accent}, ${theme.colors.accentCyan}, ${theme.colors.accentAlt})`,
           }}
         />
+
+        {/* Message text — word by word */}
+        <div
+          style={{
+            fontFamily: theme.fonts.display,
+            fontSize: theme.fontSizes.body,
+            color: theme.colors.text,
+            fontWeight: 700,
+            lineHeight: 1.45,
+            textAlign: "center",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "0.28em",
+          }}
+        >
+          {words.map((word, i) => {
+            const f = Math.max(0, frame - i * WORD_DELAY - 6);
+            const wOp = spring({ frame: f, fps, config: { stiffness: 80, damping: 18 }, from: 0, to: 1 });
+            const wY  = spring({ frame: f, fps, config: { stiffness: 80, damping: 18 }, from: 20, to: 0 });
+            return (
+              <span
+                key={i}
+                style={{
+                  display: "inline-block",
+                  opacity: wOp,
+                  transform: `translateY(${wY}px)`,
+                }}
+              >
+                {word}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Character */}
-      <div style={{ transform: `translateY(${bobY}px)` }}>
-        <svg width="220" height="260" viewBox="0 0 220 260" fill="none">
-          {/* Body */}
-          <rect x="55" y="118" width="110" height="100" rx="24" fill={theme.colors.accent} />
-          {/* Head */}
-          <circle cx="110" cy="88" r="60" fill={theme.colors.accent} />
-          {/* Eyes */}
-          <circle cx="88" cy="80" r="14" fill="white" />
-          <circle cx="132" cy="80" r="14" fill="white" />
-          <circle cx={happy ? 91 : 88} cy={happy ? 83 : 80} r="7" fill="#111" />
-          <circle cx={happy ? 135 : 132} cy={happy ? 83 : 80} r="7" fill="#111" />
-          {/* Mouth */}
-          {happy ? (
-            <path d="M88 106 Q110 126 132 106" stroke="white" strokeWidth="5" strokeLinecap="round" fill="none" />
-          ) : (
-            <path d="M88 114 Q110 102 132 114" stroke="white" strokeWidth="5" strokeLinecap="round" fill="none" />
-          )}
-          {/* Arms */}
-          <rect x="8" y="126" width="50" height="22" rx="11" fill={theme.colors.accent} />
-          <rect x="162" y="126" width="50" height="22" rx="11" fill={theme.colors.accent} />
-          {/* Legs */}
-          <rect x="68" y="206" width="32" height="44" rx="14" fill={theme.colors.accentAlt} />
-          <rect x="120" y="206" width="32" height="44" rx="14" fill={theme.colors.accentAlt} />
-        </svg>
+      {/* CTA button */}
+      <div
+        style={{
+          opacity: btnOp,
+          transform: `scale(${btnScale})`,
+          background: `linear-gradient(135deg, ${theme.colors.accent}, ${theme.colors.accentAlt})`,
+          borderRadius: 60,
+          padding: "22px 64px",
+          fontFamily: theme.fonts.display,
+          fontSize: 38,
+          fontWeight: 800,
+          color: "white",
+          letterSpacing: "0.5px",
+          boxShadow: `0 8px 40px ${theme.colors.accentGlow}`,
+        }}
+      >
+        Follow for more ✦
       </div>
     </div>
   );

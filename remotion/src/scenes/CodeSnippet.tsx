@@ -119,9 +119,30 @@ function tokenizeLine(line: string, lang: string): Token[] {
 export const CodeSnippet: React.FC<Props> = ({ scene, durationInFrames }) => {
   const frame = useCurrentFrame();
   const lines = scene.code.split("\n");
-  const framesPerLine = durationInFrames / lines.length;
-  const visibleCount = Math.min(Math.floor(frame / framesPerLine) + 1, lines.length);
-  const activeLine = visibleCount - 1;
+
+  // Character-level typewriter: reveal all chars over 85% of scene, hold for 15%
+  const fullText = lines.join("\n");
+  const totalChars = fullText.length;
+  const typingFrames = Math.max(1, Math.floor(durationInFrames * 0.85));
+  const visibleChars = Math.min(Math.floor((frame / typingFrames) * totalChars), totalChars);
+
+  // Map visibleChars → (activeLine index, chars visible on that line)
+  let charsLeft = visibleChars;
+  let activeLine = lines.length - 1;
+  let charsOnActiveLine = lines[activeLine].length;
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineLen = lines[i].length + 1; // +1 for the \n separator
+    if (charsLeft < lineLen) {
+      activeLine = i;
+      charsOnActiveLine = charsLeft;
+      break;
+    }
+    charsLeft -= lineLen;
+  }
+
+  const isTypingDone = visibleChars >= totalChars;
+  const cursorVisible = Math.floor(frame / 6) % 2 === 0;
 
   return (
     <div
@@ -177,18 +198,25 @@ export const CodeSnippet: React.FC<Props> = ({ scene, durationInFrames }) => {
           overflowX: "hidden",
         }}
       >
-        {lines.slice(0, visibleCount).map((line, i) => {
+        {lines.map((line, i) => {
+          // Lines beyond the current typing position are hidden
+          if (i > activeLine) return null;
+
           const isActive = i === activeLine;
-          const tokens = tokenizeLine(line, scene.language);
+          // For fully-typed lines show all chars; for the active line show partial
+          const displayText = isActive ? line.slice(0, charsOnActiveLine) : line;
+          const isLineComplete = !isActive || isTypingDone;
+          const tokens = tokenizeLine(displayText, scene.language);
+
           return (
             <div
               key={i}
               style={{
                 display: "flex",
                 alignItems: "center",
-                backgroundColor: isActive ? theme.colors.codeLineHl : "transparent",
+                backgroundColor: isActive && !isTypingDone ? theme.colors.codeLineHl : "transparent",
                 padding: "0 28px",
-                borderLeft: isActive
+                borderLeft: isActive && !isTypingDone
                   ? `3px solid ${theme.colors.accent}`
                   : "3px solid transparent",
               }}
@@ -210,12 +238,10 @@ export const CodeSnippet: React.FC<Props> = ({ scene, durationInFrames }) => {
               {/* Tokens */}
               <span>
                 {tokens.map((tok, j) => (
-                  <span key={j} style={{ color: tok.color }}>
-                    {tok.text}
-                  </span>
+                  <span key={j} style={{ color: tok.color }}>{tok.text}</span>
                 ))}
-                {/* Blinking cursor on active line */}
-                {isActive && (
+                {/* Blinking cursor while typing this line */}
+                {isActive && !isLineComplete && cursorVisible && (
                   <span
                     style={{
                       display: "inline-block",
@@ -224,7 +250,6 @@ export const CodeSnippet: React.FC<Props> = ({ scene, durationInFrames }) => {
                       backgroundColor: theme.colors.accent,
                       marginLeft: 2,
                       verticalAlign: "text-bottom",
-                      opacity: Math.floor(frame / 8) % 2 === 0 ? 1 : 0,
                     }}
                   />
                 )}

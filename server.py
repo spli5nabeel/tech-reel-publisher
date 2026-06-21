@@ -16,8 +16,10 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 OUT_DIR = Path(__file__).parent / "out"
 WEB_DIR = Path(__file__).parent / "web"
+MUSIC_DIR = Path(__file__).parent / "remotion" / "public" / "music"
 
 OUT_DIR.mkdir(exist_ok=True)
+MUSIC_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ── Job store ────────────────────────────────────────────────────────────────
@@ -41,6 +43,7 @@ class GenerateRequest(BaseModel):
     bg_color: Optional[str] = None
     tts: bool = False
     voice: Optional[str] = None
+    music: Optional[str] = None  # track filename; mutually exclusive with tts
     out: str = "video.mp4"
 
 
@@ -52,7 +55,9 @@ def _run_job(job: Job, req: GenerateRequest) -> None:
 
     try:
         out_filename = req.out if req.out.endswith(".mp4") else f"{req.out}.mp4"
-        out_path = OUT_DIR / out_filename
+        # Unique per-job path so a render never tries to overwrite a file the
+        # browser preview still has open (which locks it on Windows → exit 1).
+        out_path = OUT_DIR / f"{job.id}_{out_filename}"
         bg_style = None if req.bg == "random" else req.bg
 
         result = pipeline_run(
@@ -62,6 +67,7 @@ def _run_job(job: Job, req: GenerateRequest) -> None:
             bg_color=req.bg_color or None,
             tts=req.tts,
             voice=req.voice or None,
+            music=req.music or None,
             log=log,
         )
 
@@ -128,6 +134,12 @@ async def voices():
     except Exception:
         return ["en-US-EricNeural", "en-US-JennyNeural", "en-GB-RyanNeural",
                 "en-US-GuyNeural", "en-US-AriaNeural", "en-GB-SoniaNeural"]
+
+
+@app.get("/music")
+async def music():
+    """List royalty-free music tracks available in remotion/public/music/."""
+    return sorted(p.name for p in MUSIC_DIR.glob("*.mp3"))
 
 
 @app.get("/")

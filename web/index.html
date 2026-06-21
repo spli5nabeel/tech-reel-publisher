@@ -1,408 +1,668 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tech-Tip Reels Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body { background: #0f0f0f; font-family: Inter, system-ui, sans-serif; color: #f3f4f6; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tech Reels Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset & tokens ──────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #09090b;
+  --surface:  #111118;
+  --card:     #18181f;
+  --border:   rgba(255,255,255,0.08);
+  --accent:   #a855f7;
+  --accent2:  #ec4899;
+  --cyan:     #06b6d4;
+  --glow:     rgba(168,85,247,0.3);
+  --text:     #f4f4f5;
+  --muted:    #71717a;
+  --success:  #22c55e;
+  --warning:  #f59e0b;
+  --error:    #ef4444;
+  --radius:   14px;
+  --radius-sm:8px;
+}
+html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;}
 
-    .field {
-      width: 100%;
-      background: #1a1a2e;
-      border: 1px solid #2d2d4e;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      color: #f3f4f6;
-      outline: none;
-      transition: border-color 0.15s;
-      appearance: none;
-    }
-    .field:focus { border-color: #e94560; }
-    .field::placeholder { color: #4b5563; }
+/* ── Layout ──────────────────────────────────────────────────── */
+.app{display:flex;flex-direction:column;height:100vh}
 
-    .field-icon-wrap {
-      position: relative;
-    }
-    .field-icon-wrap .field {
-      padding-left: 38px;
-    }
-    .field-icon-wrap .icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #4b5563;
-      pointer-events: none;
-    }
+.header{
+  height:56px;min-height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:10;
+}
+.header-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.2px}
+.header-dot{width:26px;height:26px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:13px}
+.header-badge{
+  font-size:11px;font-weight:600;letter-spacing:.5px;
+  color:var(--muted);background:var(--card);
+  border:1px solid var(--border);border-radius:6px;padding:3px 10px;
+}
 
-    label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #9ca3af;
-      margin-bottom: 6px;
-    }
-    label svg { flex-shrink: 0; }
+.workspace{
+  display:grid;
+  grid-template-columns:360px 1fr;
+  flex:1;
+  overflow:hidden;
+}
 
-    .card {
-      background: #1a1a2e;
-      border: 1px solid #2d2d4e;
-      border-radius: 16px;
-      padding: 24px;
-    }
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar{
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sidebar-body{
+  flex:1;overflow-y:auto;padding:20px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.sidebar-body::-webkit-scrollbar{width:4px}
+.sidebar-body::-webkit-scrollbar-track{background:transparent}
+.sidebar-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.25);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
 
-    .log-text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-    select option { background: #1a1a2e; }
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-thumb { background: #2d2d4e; border-radius: 3px; }
-  </style>
+/* Section */
+.section{padding:4px 0}
+.section-label{
+  font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Form controls */
+.field{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);font-family:inherit;font-size:14px;
+  padding:10px 14px;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  appearance:none;-webkit-appearance:none;
+}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+.field::placeholder{color:var(--muted)}
+textarea.field{resize:none;min-height:80px;line-height:1.5}
+select.field{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:36px;cursor:pointer;
+}
+
+/* Color row */
+.color-row{display:flex;gap:8px;align-items:center}
+.color-swatch{
+  width:38px;height:38px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);cursor:pointer;padding:2px;
+  background:transparent;
+}
+.color-swatch input[type=color]{
+  width:100%;height:100%;border:none;padding:0;cursor:pointer;
+  border-radius:4px;background:none;
+}
+.color-hex{flex:1;font-family:'JetBrains Mono','Fira Code',monospace;letter-spacing:.5px}
+.color-reset{
+  padding:9px 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--card);
+  color:var(--muted);font-size:12px;font-family:inherit;
+  cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;
+}
+.color-reset:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+
+/* Toggle row */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:12px 14px;
+}
+.toggle-info{display:flex;flex-direction:column;gap:2px}
+.toggle-label{font-weight:600;font-size:13px}
+.toggle-sub{font-size:11px;color:var(--muted)}
+.toggle-track{
+  width:44px;height:24px;border-radius:99px;
+  background:var(--border);position:relative;cursor:pointer;
+  border:none;outline:none;flex-shrink:0;
+  transition:background .2s;
+}
+.toggle-track.on{background:var(--accent);box-shadow:0 0 12px var(--glow)}
+.toggle-knob{
+  position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;background:#fff;
+  transition:transform .2s;
+}
+.toggle-track.on .toggle-knob{transform:translateX(20px)}
+
+/* Segmented audio-mode control */
+.seg{display:flex;gap:6px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:4px}
+.seg-btn{
+  flex:1;padding:9px 10px;border:none;border-radius:6px;cursor:pointer;
+  background:transparent;color:var(--muted);
+  font-family:inherit;font-size:13px;font-weight:600;
+  transition:background .15s,color .15s;
+}
+.seg-btn:hover{color:var(--text)}
+.seg-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 12px var(--glow)}
+.seg-hint{font-size:11px;color:var(--muted);margin-top:6px}
+.seg-hint code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:10px}
+
+/* Voice / music row — shown only for the active audio mode */
+.voice-row{transition:opacity .2s,max-height .2s;overflow:hidden;max-height:0;opacity:0}
+.voice-row.visible{max-height:100px;opacity:1}
+
+/* Generate button */
+.btn-generate{
+  width:100%;padding:14px;border-radius:var(--radius);border:none;cursor:pointer;
+  font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.2px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 4px 24px var(--glow);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:opacity .15s,transform .1s;
+}
+.btn-generate:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.btn-generate:active:not(:disabled){transform:translateY(0)}
+.btn-generate:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── Preview pane ────────────────────────────────────────────── */
+.preview{
+  display:flex;flex-direction:column;align-items:center;
+  overflow:hidden;background:var(--bg);
+  gap:0;
+}
+.preview-top{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px;gap:20px;min-height:0;
+}
+
+/* Phone frame */
+.phone-wrap{position:relative;flex-shrink:0}
+.phone-frame{
+  width:330px;height:587px; /* 9:16 at 150% */
+  background:#000;
+  border-radius:54px;
+  border:2px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.8),
+    0 24px 80px rgba(0,0,0,.8),
+    0 0 60px var(--glow);
+  overflow:hidden;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.phone-notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:100px;height:30px;background:#000;border-radius:0 0 20px 20px;
+  z-index:2;
+}
+.phone-placeholder{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  color:rgba(255,255,255,0.15);text-align:center;padding:20px;
+}
+.phone-placeholder svg{opacity:.4}
+.phone-placeholder p{font-size:12px;line-height:1.4}
+.phone-frame video{
+  width:100%;height:100%;object-fit:cover;
+  border-radius:52px;
+}
+
+/* Video controls */
+.video-controls{
+  display:none;align-items:center;justify-content:center;gap:12px;
+}
+.ctrl-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--card);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s;
+}
+.ctrl-btn:hover{background:rgba(168,85,247,.15);border-color:var(--accent)}
+
+/* Status strip */
+.status-strip{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:8px;
+  background:var(--card);border:1px solid var(--border);
+  font-size:12px;font-weight:600;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.status-dot.running{background:var(--warning);animation:pulse 1s infinite}
+.status-dot.done{background:var(--success)}
+.status-dot.error{background:var(--error)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Download button */
+.btn-download{
+  padding:10px 24px;border-radius:var(--radius-sm);border:none;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;
+  color:#fff;background:var(--card);
+  border:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;
+  transition:border-color .15s,background .15s;
+}
+.btn-download:hover{border-color:var(--accent);background:rgba(168,85,247,.1)}
+.btn-download:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Log panel ───────────────────────────────────────────────── */
+.log-panel{
+  width:100%;border-top:1px solid var(--border);
+  background:var(--surface);
+  display:flex;flex-direction:column;
+  height:180px;min-height:180px;
+  flex-shrink:0;
+}
+.log-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--muted);
+}
+.log-body{
+  flex:1;overflow-y:auto;padding:10px 16px;
+  font-family:'JetBrains Mono','Fira Code',monospace;
+  font-size:12px;line-height:1.7;color:var(--muted);
+}
+.log-body::-webkit-scrollbar{width:3px}
+.log-body::-webkit-scrollbar-thumb{background:var(--border)}
+.log-line{display:block}
+.log-line.info{color:#a1a1aa}
+.log-line.ok{color:var(--success)}
+.log-line.err{color:var(--error)}
+.log-line.step{color:var(--text)}
+</style>
 </head>
-
 <body>
+<div class="app">
 
   <!-- Header -->
-  <header style="border-bottom:1px solid #1f1f3a;padding:14px 32px;display:flex;align-items:center;gap:10px;background:#0d0d1a;">
-    <i data-lucide="clapperboard" style="color:#e94560;width:20px;height:20px;"></i>
-    <span style="font-size:15px;font-weight:700;letter-spacing:0.02em;">Tech-Tip Reels Generator</span>
+  <header class="header">
+    <div class="header-logo">
+      <div class="header-dot">▶</div>
+      Tech Reels Studio
+    </div>
+    <div class="header-badge">BETA</div>
   </header>
 
-  <!-- Main -->
-  <main style="max-width:1200px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
+  <!-- Workspace -->
+  <div class="workspace">
 
-    <!-- ── LEFT: Parameters + Log ── -->
-    <div style="display:flex;flex-direction:column;gap:20px;">
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-body">
 
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
-          <i data-lucide="sliders-horizontal" style="width:15px;height:15px;color:#6b7280;"></i>
-          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Parameters</span>
+        <!-- Topic -->
+        <div class="section">
+          <div class="section-label">Topic</div>
+          <textarea id="topic" class="field" rows="3"
+            placeholder="e.g. Python list comprehensions, Git stash tricks, Docker basics…"></textarea>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Background -->
+        <div class="section">
+          <div class="section-label">Background</div>
+          <select id="bg" class="field">
+            <option value="random">✦ Random (auto from topic)</option>
+            <option value="particles">Particles</option>
+            <option value="gradient">Aurora Gradient</option>
+            <option value="grid">Scrolling Grid</option>
+            <option value="shapes">Network Dots</option>
+          </select>
+        </div>
 
-          <!-- Topic -->
-          <div>
-            <label>
-              <i data-lucide="lightbulb" style="width:13px;height:13px;"></i>
-              Topic <span style="color:#e94560;margin-left:2px;">*</span>
+        <!-- Color -->
+        <div class="section">
+          <div class="section-label">Background colour</div>
+          <div class="color-row">
+            <label class="color-swatch">
+              <input type="color" id="bg-color" value="#09090b" />
             </label>
-            <div class="field-icon-wrap">
-              <i data-lucide="type" class="icon" style="width:15px;height:15px;"></i>
-              <input id="topic" type="text" class="field" placeholder="e.g. git stash for work in progress" required />
-            </div>
+            <input type="text" id="bg-color-hex" class="field color-hex" value="#09090b" maxlength="7" />
+            <button class="color-reset" id="color-reset">Reset</button>
           </div>
+        </div>
 
-          <!-- Background animation -->
-          <div>
-            <label>
-              <i data-lucide="sparkles" style="width:13px;height:13px;"></i>
-              Background Animation
-            </label>
-            <div class="field-icon-wrap">
-              <i data-lucide="wand-2" class="icon" style="width:15px;height:15px;"></i>
-              <select id="bg" class="field" style="cursor:pointer;">
-                <option value="random">Random (derived from topic)</option>
-                <option value="particles">Particles</option>
-                <option value="gradient">Gradient</option>
-                <option value="grid">Grid</option>
-                <option value="shapes">Shapes</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Background colour -->
-          <div>
-            <label>
-              <i data-lucide="palette" style="width:13px;height:13px;"></i>
-              Background Colour
-            </label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input id="bg-color" type="color" value="#0f0f0f"
-                style="width:42px;height:42px;border-radius:10px;border:1px solid #2d2d4e;
-                       background:#1a1a2e;padding:4px;cursor:pointer;flex-shrink:0;" />
-              <div class="field-icon-wrap" style="flex:1;">
-                <i data-lucide="hash" class="icon" style="width:14px;height:14px;"></i>
-                <input id="bg-color-hex" type="text" value="#0f0f0f" maxlength="7"
-                  class="field" style="font-family:monospace;" />
-              </div>
-              <button type="button" id="color-reset"
-                style="flex-shrink:0;display:flex;align-items:center;gap:6px;padding:10px 14px;
-                       background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;
-                       color:#9ca3af;font-size:13px;cursor:pointer;transition:color 0.15s;white-space:nowrap;"
-                onmouseover="this.style.color='#f3f4f6'" onmouseout="this.style.color='#9ca3af'">
-                <i data-lucide="rotate-ccw" style="width:13px;height:13px;"></i>
-                Reset
-              </button>
-            </div>
-          </div>
-
-          <!-- TTS toggle -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:10px;background:#16213e;
-                          border:1px solid #2d2d4e;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i data-lucide="mic" style="width:16px;height:16px;color:#9ca3af;"></i>
-              </div>
-              <div>
-                <div style="font-size:14px;font-weight:500;color:#e5e7eb;">TTS Narration</div>
-                <div style="font-size:12px;color:#6b7280;margin-top:1px;">Synthesise voice using edge-tts</div>
-              </div>
-            </div>
-            <button type="button" id="tts-toggle" role="switch" aria-checked="false"
-              onclick="toggleTts()"
-              style="width:48px;height:26px;border-radius:13px;background:#374151;border:none;
-                     cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;">
-              <span id="tts-knob"
-                style="position:absolute;top:3px;left:3px;width:20px;height:20px;
-                       border-radius:50%;background:white;transition:transform 0.2s;
-                       box-shadow:0 1px 3px rgba(0,0,0,0.4);">
-              </span>
+        <!-- Audio -->
+        <div class="section">
+          <div class="section-label">Audio</div>
+          <div class="seg">
+            <button type="button" class="seg-btn active" id="seg-voice" onclick="setAudioMode('voice')">
+              Voice narration
+            </button>
+            <button type="button" class="seg-btn" id="seg-music" onclick="setAudioMode('music')">
+              Background music
             </button>
           </div>
-
-          <!-- Voice -->
-          <div id="voice-row" style="opacity:0.4;pointer-events:none;transition:opacity 0.2s;">
-            <label>
-              <i data-lucide="user-round" style="width:13px;height:13px;"></i>
-              Voice
-            </label>
-            <div class="field-icon-wrap">
-              <i data-lucide="headphones" class="icon" style="width:15px;height:15px;"></i>
-              <select id="voice" class="field" style="cursor:pointer;">
-                <option value="">Loading voices...</option>
-              </select>
-            </div>
+          <div class="voice-row visible" id="voice-row" style="margin-top:8px">
+            <select id="voice" class="field">
+              <option value="">Loading voices…</option>
+            </select>
           </div>
-
-          <!-- Output filename -->
-          <div>
-            <label>
-              <i data-lucide="file-video" style="width:13px;height:13px;"></i>
-              Output Filename
-            </label>
-            <div class="field-icon-wrap">
-              <i data-lucide="folder" class="icon" style="width:15px;height:15px;"></i>
-              <input id="out" type="text" value="video.mp4" class="field" style="font-family:monospace;" />
-            </div>
+          <div class="voice-row" id="music-row" style="margin-top:8px">
+            <select id="music" class="field">
+              <option value="">Loading tracks…</option>
+            </select>
+            <p class="seg-hint" id="music-hint">Drop .mp3 files in <code>remotion/public/music/</code></p>
           </div>
+        </div>
 
-          <!-- Generate button -->
-          <button id="btn" type="button" onclick="submitForm()"
-            style="width:100%;padding:13px;background:#e94560;border:none;border-radius:10px;
-                   color:white;font-size:14px;font-weight:600;cursor:pointer;
-                   transition:background 0.15s;margin-top:4px;display:flex;
-                   align-items:center;justify-content:center;gap:8px;"
-            onmouseover="if(!this.disabled)this.style.background='#c73652'"
-            onmouseout="if(!this.disabled)this.style.background='#e94560'">
-            <i data-lucide="play" style="width:16px;height:16px;fill:white;stroke:white;"></i>
-            Generate Video
+        <!-- Output filename -->
+        <div class="section">
+          <div class="section-label">Output filename</div>
+          <input type="text" id="out" class="field" value="video.mp4" />
+        </div>
+
+      </div>
+
+      <!-- Sticky footer: generate button -->
+      <div class="sidebar-footer">
+        <button class="btn-generate" id="generate-btn" onclick="submitForm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Generate Video
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Preview ── -->
+    <main class="preview">
+
+      <div class="preview-top">
+        <!-- Status -->
+        <div class="status-strip" id="status-strip">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">Ready</span>
+        </div>
+
+        <!-- Phone frame -->
+        <div class="phone-wrap">
+          <div class="phone-frame" id="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-placeholder" id="phone-placeholder">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="20" height="20" rx="4"/>
+                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+              </svg>
+              <p>Your video will<br>appear here</p>
+            </div>
+            <video id="preview-video" style="display:none" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+
+        <!-- Video controls -->
+        <div class="video-controls" id="video-controls">
+          <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
           </button>
-
-        </div>
-      </div>
-
-      <!-- Log card -->
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div style="display:flex;align-items:center;justify-content:space-between;
-                    padding:12px 20px;border-bottom:1px solid #2d2d4e;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <i data-lucide="terminal" style="width:14px;height:14px;color:#6b7280;"></i>
-            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Log Output</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:#374151;"></div>
-            <span id="status-badge" style="display:none;font-size:11px;font-weight:600;padding:2px 10px;border-radius:999px;"></span>
-          </div>
-        </div>
-        <pre id="log" class="log-text"
-          style="font-size:12px;color:#6b7280;padding:16px 20px;margin:0;
-                 overflow-y:auto;max-height:220px;white-space:pre-wrap;line-height:1.7;">Waiting to start...</pre>
-      </div>
-
-    </div>
-
-    <!-- ── RIGHT: Preview ── -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
-
-      <div style="display:flex;align-items:center;gap:8px;align-self:flex-start;">
-        <i data-lucide="monitor-play" style="width:15px;height:15px;color:#6b7280;"></i>
-        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Preview</span>
-      </div>
-
-      <!-- 9:16 frame -->
-      <div style="width:100%;max-width:300px;">
-        <div style="aspect-ratio:9/16;border-radius:20px;overflow:hidden;
-                    border:1px solid #2d2d4e;background:#1a1a2e;position:relative;">
-
-          <!-- Placeholder -->
-          <div id="placeholder"
-            style="position:absolute;inset:0;display:flex;flex-direction:column;
-                   align-items:center;justify-content:center;gap:14px;color:#374151;">
-            <i data-lucide="video" style="width:44px;height:44px;stroke-width:1;"></i>
-            <span style="font-size:12px;text-align:center;line-height:1.6;">
-              Your video will<br/>appear here
-            </span>
-          </div>
-
-          <!-- Video -->
-          <video id="preview-video"
-            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;"
-            controls loop>
-          </video>
+          <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" title="Mute / Unmute">
+            <svg id="icon-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <svg id="icon-sound" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </button>
         </div>
 
         <!-- Download -->
-        <a id="download-btn"
-          style="display:none;margin-top:14px;width:100%;padding:12px 16px;
-                 background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;
-                 color:#d1d5db;font-size:13px;font-weight:600;text-align:center;
-                 cursor:pointer;text-decoration:none;transition:background 0.15s;
-                 align-items:center;justify-content:center;gap:8px;"
-          onmouseover="this.style.background='#16213e'"
-          onmouseout="this.style.background='#1a1a2e'">
-          <i data-lucide="download" style="width:15px;height:15px;display:inline;vertical-align:middle;margin-right:6px;"></i>
+        <button class="btn-download" id="download-btn" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
           Download MP4
-        </a>
+        </button>
       </div>
 
-    </div>
-  </main>
+      <!-- Log -->
+      <div class="log-panel">
+        <div class="log-header">
+          <span>Log output</span>
+          <span id="log-status" style="color:var(--muted)">—</span>
+        </div>
+        <div class="log-body" id="log-body">
+          <span class="log-line info">Waiting to start…</span>
+        </div>
+      </div>
 
-  <script>
-    // Init Lucide icons
-    lucide.createIcons();
+    </main>
+  </div>
+</div>
 
-    let jobId = null, timer = null, ttsOn = false;
+<script>
+  let jobId  = null;
+  let timer  = null;
+  let audioMode = 'voice';   // 'voice' (TTS) | 'music' — mutually exclusive
+  let dlUrl  = null;
+  let lastStatus = null;
 
-    function toggleTts() {
-      ttsOn = !ttsOn;
-      document.getElementById('tts-toggle').style.background = ttsOn ? '#e94560' : '#374151';
-      document.getElementById('tts-knob').style.transform = ttsOn ? 'translateX(22px)' : '';
-      const row = document.getElementById('voice-row');
-      row.style.opacity = ttsOn ? '1' : '0.4';
-      row.style.pointerEvents = ttsOn ? 'auto' : 'none';
-    }
+  /* ── Audio mode (voice / music) ─────────────────────────── */
+  function setAudioMode(mode) {
+    audioMode = mode;
+    const isVoice = mode === 'voice';
+    document.getElementById('seg-voice').classList.toggle('active', isVoice);
+    document.getElementById('seg-music').classList.toggle('active', !isVoice);
+    document.getElementById('voice-row').classList.toggle('visible', isVoice);
+    document.getElementById('music-row').classList.toggle('visible', !isVoice);
+  }
 
-    document.getElementById('bg-color').addEventListener('input', e => {
-      document.getElementById('bg-color-hex').value = e.target.value;
-    });
-    document.getElementById('bg-color-hex').addEventListener('input', e => {
-      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value))
-        document.getElementById('bg-color').value = e.target.value;
-    });
-    document.getElementById('color-reset').addEventListener('click', () => {
-      document.getElementById('bg-color').value = '#0f0f0f';
-      document.getElementById('bg-color-hex').value = '#0f0f0f';
-    });
+  /* ── Color sync ─────────────────────────────────────────── */
+  document.getElementById('bg-color').addEventListener('input', e => {
+    document.getElementById('bg-color-hex').value = e.target.value;
+  });
+  document.getElementById('bg-color-hex').addEventListener('input', e => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value))
+      document.getElementById('bg-color').value = e.target.value;
+  });
+  document.getElementById('color-reset').addEventListener('click', () => {
+    document.getElementById('bg-color').value     = '#09090b';
+    document.getElementById('bg-color-hex').value = '#09090b';
+  });
 
-    async function loadVoices() {
-      try {
-        const voices = await (await fetch('/voices')).json();
-        const sel = document.getElementById('voice');
-        sel.innerHTML = voices.map(v =>
-          `<option value="${v}"${v === 'en-US-EricNeural' ? ' selected' : ''}>${v}</option>`
-        ).join('');
-      } catch {}
-    }
+  /* ── Voice list ─────────────────────────────────────────── */
+  async function loadVoices() {
+    try {
+      const voices = await (await fetch('/voices')).json();
+      const sel    = document.getElementById('voice');
+      sel.innerHTML = voices.map(v =>
+        `<option value="${v}"${v === 'en-US-EricNeural' ? ' selected' : ''}>${v}</option>`
+      ).join('');
+    } catch {}
+  }
 
-    async function submitForm() {
-      const topic = document.getElementById('topic').value.trim();
-      if (!topic) { document.getElementById('topic').focus(); return; }
-
-      setBusy(true); resetPreview(); setLog('Starting...'); setDot('#facc15'); hideBadge();
-
-      try {
-        const res = await fetch('/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            topic,
-            bg:       document.getElementById('bg').value,
-            bg_color: document.getElementById('bg-color-hex').value,
-            tts:      ttsOn,
-            voice:    ttsOn ? document.getElementById('voice').value : null,
-            out:      document.getElementById('out').value || 'video.mp4',
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) { setLog('Error: ' + (data.detail || 'Unknown')); setBusy(false); setDot('#f87171'); return; }
-        jobId = data.job_id;
-        timer = setInterval(poll, 2000);
-      } catch (err) {
-        setLog('Network error: ' + err.message); setBusy(false); setDot('#f87171');
+  /* ── Music track list ───────────────────────────────────── */
+  async function loadMusic() {
+    const sel  = document.getElementById('music');
+    const hint = document.getElementById('music-hint');
+    try {
+      const tracks = await (await fetch('/music')).json();
+      if (tracks.length) {
+        sel.innerHTML = tracks.map(t => `<option value="${t}">${t}</option>`).join('');
+        hint.style.display = 'none';
+      } else {
+        sel.innerHTML = '<option value="">No tracks found</option>';
+        hint.style.display = 'block';
       }
+    } catch {
+      sel.innerHTML = '<option value="">No tracks found</option>';
+    }
+  }
+
+  /* ── Submit ─────────────────────────────────────────────── */
+  async function submitForm() {
+    const topic = document.getElementById('topic').value.trim();
+    if (!topic) { document.getElementById('topic').focus(); return; }
+
+    const isMusic = audioMode === 'music';
+    const track   = document.getElementById('music').value;
+    if (isMusic && !track) {
+      setStatus('error', 'No track');
+      setLog('Pick a music track, or add .mp3 files to remotion/public/music/');
+      return;
     }
 
-    async function poll() {
-      try {
-        const data = await (await fetch(`/status/${jobId}`)).json();
-        setLog(data.log || '');
-        if (data.status === 'done') {
-          clearInterval(timer); setBusy(false);
-          setDot('#4ade80'); setBadge('Done', '#14532d', '#86efac'); showVideo(jobId);
-        } else if (data.status === 'error') {
-          clearInterval(timer); setBusy(false);
-          setDot('#f87171'); setBadge('Error', '#450a0a', '#fca5a5');
-        } else {
-          setBadge('Running', '#451a03', '#fcd34d');
-        }
-      } catch {}
-    }
+    setBusy(true);
+    setStatus('running', 'Generating…');
+    setLog('Starting…');
+    dlUrl = null;
+    document.getElementById('download-btn').disabled = true;
+    document.getElementById('preview-video').style.display = 'none';
+    document.getElementById('phone-placeholder').style.display = 'flex';
 
-    function setBusy(on) {
-      const btn = document.getElementById('btn');
-      btn.disabled = on;
-      btn.style.opacity = on ? '0.7' : '1';
-      btn.style.cursor = on ? 'not-allowed' : 'pointer';
-      btn.innerHTML = on
-        ? '<span class="spinner"></span>Generating...'
-        : '<i data-lucide="play" style="width:16px;height:16px;fill:white;stroke:white;display:inline;vertical-align:middle;margin-right:6px;"></i>Generate Video';
-      if (!on) lucide.createIcons();
+    try {
+      const res  = await fetch('/generate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          topic,
+          bg:       document.getElementById('bg').value,
+          bg_color: document.getElementById('bg-color-hex').value,
+          tts:      !isMusic,
+          voice:    !isMusic ? document.getElementById('voice').value : null,
+          music:    isMusic ? track : null,
+          out:      document.getElementById('out').value || 'video.mp4',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLog('Error: ' + (data.detail || 'Unknown'));
+        setStatus('error', 'Failed');
+        setBusy(false);
+        return;
+      }
+      jobId = data.job_id;
+      timer = setInterval(poll, 2000);
+    } catch (err) {
+      setLog('Network error: ' + err.message);
+      setStatus('error', 'Failed');
+      setBusy(false);
     }
-    function setLog(t) { const el = document.getElementById('log'); el.textContent = t; el.scrollTop = el.scrollHeight; }
-    function setDot(c) { document.getElementById('status-dot').style.background = c; }
-    function setBadge(l, bg, c) { const b = document.getElementById('status-badge'); b.textContent = l; b.style.background = bg; b.style.color = c; b.style.display = 'inline-block'; }
-    function hideBadge() { document.getElementById('status-badge').style.display = 'none'; }
-    function showVideo(id) {
-      const vid = document.getElementById('preview-video');
-      const dl  = document.getElementById('download-btn');
-      vid.src = `/video/${id}?t=${Date.now()}`;
-      vid.style.display = 'block';
-      document.getElementById('placeholder').style.display = 'none';
-      dl.href = `/video/${id}`;
-      dl.download = document.getElementById('out').value || 'video.mp4';
-      dl.style.display = 'flex';
-    }
-    function resetPreview() {
-      document.getElementById('preview-video').style.display = 'none';
-      document.getElementById('preview-video').src = '';
-      document.getElementById('placeholder').style.display = 'flex';
-      document.getElementById('download-btn').style.display = 'none';
-    }
+  }
 
-    loadVoices();
-  </script>
+  /* ── Poll ───────────────────────────────────────────────── */
+  async function poll() {
+    try {
+      const data = await (await fetch(`/status/${jobId}`)).json();
+      renderLog(data.log || '');
 
+      if (data.status === 'done') {
+        clearInterval(timer);
+        setBusy(false);
+        setStatus('done', 'Done');
+        showVideo(jobId);
+      } else if (data.status === 'error') {
+        clearInterval(timer);
+        setBusy(false);
+        setStatus('error', 'Error');
+      }
+    } catch {}
+  }
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function setBusy(busy) {
+    document.getElementById('generate-btn').disabled = busy;
+    document.getElementById('generate-btn').innerHTML = busy
+      ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg> Generating…`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Video`;
+  }
+
+  function setStatus(type, text) {
+    const dot  = document.getElementById('status-dot');
+    const span = document.getElementById('status-text');
+    dot.className  = 'status-dot ' + (type || '');
+    span.textContent = text;
+  }
+
+  function renderLog(raw) {
+    const body  = document.getElementById('log-body');
+    const lines = raw.split('\n').filter(l => l.trim());
+    body.innerHTML = lines.map(l => {
+      const cls = l.startsWith('Error') ? 'err'
+                : l.startsWith('Done')  ? 'ok'
+                : l.startsWith('Script ready') || l.startsWith('Audio') ? 'step'
+                : 'info';
+      return `<span class="log-line ${cls}">&gt; ${escHtml(l)}</span>`;
+    }).join('\n') || '<span class="log-line info">&gt; Waiting…</span>';
+    body.scrollTop = body.scrollHeight;
+    document.getElementById('log-status').textContent = lines[lines.length - 1] || '';
+  }
+
+  function setLog(msg) {
+    renderLog(msg);
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function showVideo(jid) {
+    const url   = `/video/${jid}?t=${Date.now()}`;
+    dlUrl = url;
+    const vid   = document.getElementById('preview-video');
+    const ph    = document.getElementById('phone-placeholder');
+    vid.src     = url;
+    vid.muted   = true;
+    vid.style.display = 'block';
+    ph.style.display  = 'none';
+
+    const ctrl = document.getElementById('video-controls');
+    ctrl.style.display = 'flex';
+    updatePlayBtn();
+    updateMuteBtn();
+
+    vid.onplay  = updatePlayBtn;
+    vid.onpause = updatePlayBtn;
+
+    const dlBtn = document.getElementById('download-btn');
+    dlBtn.disabled = false;
+    dlBtn.onclick  = () => {
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = document.getElementById('out').value || 'video.mp4';
+      a.click();
+    };
+  }
+
+  function togglePlay() {
+    const vid = document.getElementById('preview-video');
+    vid.paused ? vid.play() : vid.pause();
+  }
+
+  function toggleMute() {
+    const vid = document.getElementById('preview-video');
+    vid.muted = !vid.muted;
+    updateMuteBtn();
+  }
+
+  function updatePlayBtn() {
+    const vid = document.getElementById('preview-video');
+    const btn = document.getElementById('play-btn');
+    btn.innerHTML = vid.paused
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+  }
+
+  function updateMuteBtn() {
+    const vid = document.getElementById('preview-video');
+    document.getElementById('icon-muted').style.display = vid.muted ? '' : 'none';
+    document.getElementById('icon-sound').style.display = vid.muted ? 'none' : '';
+  }
+
+  /* ── Init ───────────────────────────────────────────────── */
+  loadVoices();
+  loadMusic();
+  setAudioMode('voice');
+</script>
 </body>
 </html>

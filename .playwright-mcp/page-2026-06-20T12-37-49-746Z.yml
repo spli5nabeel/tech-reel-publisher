@@ -1,0 +1,129 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - img [ref=e93]
+    - generic [ref=e8]: Tech-Tip Reels Generator
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - img [ref=e98]
+          - generic [ref=e14]: Parameters
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]:
+              - img [ref=e99]
+              - text: Topic
+              - generic [ref=e20]: "*"
+            - generic [ref=e21]:
+              - img
+              - textbox "e.g. git stash for work in progress" [ref=e22]: Python list comprehensions
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - img [ref=e101]
+              - text: Background Animation
+            - generic [ref=e28]:
+              - img
+              - combobox [ref=e29] [cursor=pointer]:
+                - option "Random (derived from topic)" [selected]
+                - option "Particles"
+                - option "Gradient"
+                - option "Grid"
+                - option "Shapes"
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - img [ref=e104]
+              - text: Background Colour
+            - generic [ref=e38]:
+              - textbox [ref=e39] [cursor=pointer]: "#0f0f0f"
+              - generic [ref=e40]:
+                - img
+                - textbox [ref=e41]: "#0f0f0f"
+              - button "Reset" [ref=e42] [cursor=pointer]:
+                - img [ref=e110]
+                - text: Reset
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - img [ref=e113]
+              - generic [ref=e52]:
+                - generic [ref=e53]: TTS Narration
+                - generic [ref=e54]: Synthesise voice using edge-tts
+            - switch [active] [ref=e55] [cursor=pointer]
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - img [ref=e135]
+              - text: Voice
+            - generic [ref=e138]:
+              - img
+              - combobox [ref=e139] [cursor=pointer]:
+                - option "en-AU-NatashaNeural"
+                - option "en-AU-WilliamMultilingualNeural"
+                - option "en-CA-ClaraNeural"
+                - option "en-CA-LiamNeural"
+                - option "en-GB-LibbyNeural"
+                - option "en-GB-MaisieNeural"
+                - option "en-GB-RyanNeural"
+                - option "en-GB-SoniaNeural"
+                - option "en-GB-ThomasNeural"
+                - option "en-HK-SamNeural"
+                - option "en-HK-YanNeural"
+                - option "en-IE-ConnorNeural"
+                - option "en-IE-EmilyNeural"
+                - option "en-IN-NeerjaExpressiveNeural"
+                - option "en-IN-NeerjaNeural"
+                - option "en-IN-PrabhatNeural"
+                - option "en-KE-AsiliaNeural"
+                - option "en-KE-ChilembaNeural"
+                - option "en-NG-AbeoNeural"
+                - option "en-NG-EzinneNeural"
+                - option "en-NZ-MitchellNeural"
+                - option "en-NZ-MollyNeural"
+                - option "en-PH-JamesNeural"
+                - option "en-PH-RosaNeural"
+                - option "en-SG-LunaNeural"
+                - option "en-SG-WayneNeural"
+                - option "en-TZ-ElimuNeural"
+                - option "en-TZ-ImaniNeural"
+                - option "en-US-AnaNeural"
+                - option "en-US-AndrewMultilingualNeural"
+                - option "en-US-AndrewNeural"
+                - option "en-US-AriaNeural"
+                - option "en-US-AvaMultilingualNeural"
+                - option "en-US-AvaNeural"
+                - option "en-US-BrianMultilingualNeural"
+                - option "en-US-BrianNeural"
+                - option "en-US-ChristopherNeural"
+                - option "en-US-EmmaMultilingualNeural"
+                - option "en-US-EmmaNeural"
+                - option "en-US-EricNeural" [selected]
+                - option "en-US-GuyNeural"
+                - option "en-US-JennyNeural"
+                - option "en-US-MichelleNeural"
+                - option "en-US-RogerNeural"
+                - option "en-US-SteffanNeural"
+                - option "en-ZA-LeahNeural"
+                - option "en-ZA-LukeNeural"
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - img [ref=e116]
+              - text: Output Filename
+            - generic [ref=e63]:
+              - img
+              - textbox [ref=e64]: video.mp4
+          - button "Generate Video" [ref=e120] [cursor=pointer]:
+            - img [ref=e121]
+            - text: Generate Video
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - img [ref=e123]
+            - generic [ref=e73]: Log Output
+          - generic [ref=e92]: Done
+        - generic [ref=e76]: "Generating script for: Python list comprehensions Script ready — 7 scenes, 35s total Rendering video (this takes 1-2 minutes)... Done — video.mp4"
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - img [ref=e125]
+        - generic [ref=e82]: Preview
+      - link "Download MP4" [ref=e129] [cursor=pointer]:
+        - /url: /video/8fe3f2d3
+        - img [ref=e130]
+        - text: Download MP4

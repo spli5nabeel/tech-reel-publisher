@@ -53,6 +53,7 @@ export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames, bgStyle,
         <CaptionBar
           narration={scene.narration}
           durationInFrames={durationInFrames}
+          wordTimings={scene.wordTimings}
         />
       )}
     </div>

@@ -1,0 +1,82 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - img [ref=e3]
+    - generic [ref=e8]: Tech-Tip Reels Generator
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - img [ref=e13]
+          - generic [ref=e14]: Parameters
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]:
+              - img [ref=e18]
+              - text: Topic
+              - generic [ref=e20]: "*"
+            - generic [ref=e21]:
+              - img
+              - textbox "e.g. git stash for work in progress" [ref=e22]
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - img [ref=e25]
+              - text: Background Animation
+            - generic [ref=e28]:
+              - img
+              - combobox [ref=e29] [cursor=pointer]:
+                - option "Random (derived from topic)" [selected]
+                - option "Particles"
+                - option "Gradient"
+                - option "Grid"
+                - option "Shapes"
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - img [ref=e32]
+              - text: Background Colour
+            - generic [ref=e38]:
+              - textbox [ref=e39] [cursor=pointer]: "#0f0f0f"
+              - generic [ref=e40]:
+                - img
+                - textbox [ref=e41]: "#0f0f0f"
+              - button "Reset" [ref=e42] [cursor=pointer]:
+                - img [ref=e43]
+                - text: Reset
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - img [ref=e49]
+              - generic [ref=e52]:
+                - generic [ref=e53]: TTS Narration
+                - generic [ref=e54]: Synthesise voice using edge-tts
+            - switch [ref=e55] [cursor=pointer]
+          - generic:
+            - generic:
+              - img
+              - text: Voice
+            - generic:
+              - img
+              - combobox:
+                - option "Loading voices..." [selected]
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - img [ref=e59]
+              - text: Output Filename
+            - generic [ref=e63]:
+              - img
+              - textbox [ref=e64]: video.mp4
+          - button "Generate Video" [ref=e65] [cursor=pointer]:
+            - img [ref=e66]
+            - text: Generate Video
+      - generic [ref=e68]:
+        - generic [ref=e70]:
+          - img [ref=e71]
+          - generic [ref=e73]: Log Output
+        - generic [ref=e76]: Waiting to start...
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - img [ref=e79]
+        - generic [ref=e82]: Preview
+      - generic [ref=e85]:
+        - img [ref=e86]
+        - generic [ref=e89]:
+          - text: Your video will
+          - text: appear here

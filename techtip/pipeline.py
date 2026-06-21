@@ -15,13 +15,18 @@ def run(
     bg_color: str | None = None,
     tts: bool = False,
     voice: str | None = None,
+    music: str | None = None,
     log=print,
 ) -> Path:
     log(f"Generating script for: {topic}")
     tip: Tip = generate_tip(topic)
     log(f"Script ready — {len(tip.scenes)} scenes, "
         f"{sum(s.duration_in_seconds for s in tip.scenes):.0f}s total")
-    if tts:
+    # Voice narration and background music are mutually exclusive; music wins.
+    if music:
+        log(f"Using background music: {music}")
+        tip = tip.model_copy(update={"audio": f"music/{music}"})
+    elif tts:
         log("Synthesising narration audio...")
         tip = synthesize_tip(tip, voice=voice, public_dir=REMOTION_PUBLIC_DIR)
         log("Audio ready.")

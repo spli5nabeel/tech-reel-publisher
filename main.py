@@ -40,6 +40,13 @@ def main() -> None:
         default=None,
         help="edge-tts voice name (default: en-US-EricNeural or TECHTIP_TTS_VOICE env var)",
     )
+    parser.add_argument(
+        "--music",
+        default=None,
+        metavar="TRACK.mp3",
+        help="Background-music filename from remotion/public/music/ "
+             "(mutually exclusive with --tts; music takes precedence)",
+    )
     args = parser.parse_args()
 
     bg_style = None if args.bg == "random" else args.bg
@@ -50,6 +57,7 @@ def main() -> None:
         bg_color=args.color,
         tts=args.tts,
         voice=args.voice,
+        music=args.music,
     )
     print(f"Rendered: {out_path}")
 

@@ -320,6 +320,20 @@ select.field{
             <option value="gradient">Aurora Gradient</option>
             <option value="grid">Scrolling Grid</option>
             <option value="shapes">Network Dots</option>
+            <option value="aurora-waves">Aurora Waves</option>
+            <option value="neon-pulse">Neon Pulse</option>
+            <option value="matrix-rain">Matrix Rain</option>
+          </select>
+        </div>
+
+        <!-- Transition -->
+        <div class="section">
+          <div class="section-label">Transition</div>
+          <select id="transition" class="field">
+            <option value="fade">Fade</option>
+            <option value="slide-left">Slide</option>
+            <option value="zoom">Zoom</option>
+            <option value="none">None (hard cut)</option>
           </select>
         </div>
 
@@ -356,6 +370,24 @@ select.field{
               <option value="">Loading tracks…</option>
             </select>
             <p class="seg-hint" id="music-hint">Drop .mp3 files in <code>remotion/public/music/</code></p>
+          </div>
+          <!-- Speed slider -->
+          <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--muted);white-space:nowrap">Speed</span>
+            <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0"
+              style="flex:1;accent-color:var(--accent)" oninput="updateSpeedLabel()" />
+            <span id="speed-label" style="font-size:12px;font-weight:600;min-width:32px;text-align:right">1.0×</span>
+          </div>
+        </div>
+
+        <!-- Duration -->
+        <div class="section">
+          <div class="section-label">Duration</div>
+          <div class="seg" id="dur-seg">
+            <button type="button" class="seg-btn" id="dur-30" onclick="setDuration(30)">30 s</button>
+            <button type="button" class="seg-btn active" id="dur-45" onclick="setDuration(45)">45 s</button>
+            <button type="button" class="seg-btn" id="dur-60" onclick="setDuration(60)">60 s</button>
+            <button type="button" class="seg-btn" id="dur-90" onclick="setDuration(90)">90 s</button>
           </div>
         </div>
 
@@ -441,11 +473,26 @@ select.field{
 </div>
 
 <script>
-  let jobId  = null;
-  let timer  = null;
-  let audioMode = 'voice';   // 'voice' (TTS) | 'music' — mutually exclusive
-  let dlUrl  = null;
+  let jobId     = null;
+  let timer     = null;
+  let audioMode = 'voice';  // 'voice' | 'music'
+  let duration  = 45;
+  let dlUrl     = null;
   let lastStatus = null;
+
+  /* ── Duration pills ────────────────────────────────────── */
+  function setDuration(s) {
+    duration = s;
+    [30, 45, 60, 90].forEach(v => {
+      document.getElementById('dur-' + v).classList.toggle('active', v === s);
+    });
+  }
+
+  /* ── Speed label ────────────────────────────────────────── */
+  function updateSpeedLabel() {
+    const v = parseFloat(document.getElementById('speed').value).toFixed(1);
+    document.getElementById('speed-label').textContent = v + '×';
+  }
 
   /* ── Audio mode (voice / music) ─────────────────────────── */
   function setAudioMode(mode) {
@@ -526,12 +573,15 @@ select.field{
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           topic,
-          bg:       document.getElementById('bg').value,
-          bg_color: document.getElementById('bg-color-hex').value,
-          tts:      !isMusic,
-          voice:    !isMusic ? document.getElementById('voice').value : null,
-          music:    isMusic ? track : null,
-          out:      document.getElementById('out').value || 'video.mp4',
+          bg:            document.getElementById('bg').value,
+          bg_color:      document.getElementById('bg-color-hex').value,
+          tts:           !isMusic,
+          voice:         !isMusic ? document.getElementById('voice').value : null,
+          music:         isMusic ? track : null,
+          duration:      duration,
+          caption_speed: parseFloat(document.getElementById('speed').value),
+          transition:    document.getElementById('transition').value,
+          out:           document.getElementById('out').value || 'video.mp4',
         }),
       });
       const data = await res.json();

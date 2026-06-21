@@ -14,9 +14,10 @@ interface Props {
   durationInFrames: number;
   bgStyle: BgStyle;
   bgColor: string;
+  captionSpeed?: number;
 }
 
-export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames, bgStyle, bgColor }) => {
+export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames, bgStyle, bgColor, captionSpeed = 1.0 }) => {
   let content: React.ReactNode;
 
   switch (scene.type) {
@@ -54,6 +55,7 @@ export const SceneRouter: React.FC<Props> = ({ scene, durationInFrames, bgStyle,
           narration={scene.narration}
           durationInFrames={durationInFrames}
           wordTimings={scene.wordTimings}
+          captionSpeed={captionSpeed}
         />
       )}
     </div>

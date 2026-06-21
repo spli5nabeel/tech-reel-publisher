@@ -12,9 +12,9 @@ TAIL_PADDING = 0.4  # seconds of breathing room after the audio file ends
 TICKS_PER_SECOND = 10_000_000  # edge-tts offsets are in 100-nanosecond ticks
 
 
-async def _synthesize_scene(text: str, voice: str, out_path: Path) -> list[WordTiming]:
+async def _synthesize_scene(text: str, voice: str, out_path: Path, rate: str = "+0%") -> list[WordTiming]:
     """Synthesise speech, write MP3, and return per-word timestamps."""
-    communicate = edge_tts.Communicate(text, voice, boundary="WordBoundary")
+    communicate = edge_tts.Communicate(text, voice, boundary="WordBoundary", rate=rate)
     audio_chunks: list[bytes] = []
     timings: list[WordTiming] = []
 
@@ -43,11 +43,16 @@ def synthesize_tip(
     public_dir = public_dir or (Path(__file__).parent.parent / "remotion" / "public")
     public_dir.mkdir(parents=True, exist_ok=True)
 
+    # Derive edge-tts rate from captionSpeed: 1.0→"+0%", 1.5→"+50%", 0.8→"-20%"
+    speed = getattr(tip, "caption_speed", 1.0)
+    rate_pct = int(round((speed - 1.0) * 100))
+    rate = f"{rate_pct:+d}%"
+
     updated_scenes = []
     for i, scene in enumerate(tip.scenes):
         if scene.narration.strip():
             out_path = public_dir / f"vo_{i}.mp3"
-            timings = asyncio.run(_synthesize_scene(scene.narration, voice, out_path))
+            timings = asyncio.run(_synthesize_scene(scene.narration, voice, out_path, rate=rate))
             # Scene must contain the WHOLE audio file or the voice gets cut off.
             # The MP3 is typically ~0.8s longer than the last word's end time
             # (edge-tts adds natural trailing silence), so use the real file

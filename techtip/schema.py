@@ -68,7 +68,7 @@ Scene = Annotated[
 ]
 
 
-BgStyle = Literal["particles", "gradient", "grid", "shapes"]
+BgStyle = Literal["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain"]
 
 
 class Tip(_Base):
@@ -77,4 +77,6 @@ class Tip(_Base):
     audio: str | None = None
     bg_style: Optional[BgStyle] = None
     bg_color: str | None = None
+    caption_speed: float = 1.0
+    transition: str = "fade"
     scenes: list[Scene]

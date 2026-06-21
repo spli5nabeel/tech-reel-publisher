@@ -44,6 +44,9 @@ class GenerateRequest(BaseModel):
     tts: bool = False
     voice: Optional[str] = None
     music: Optional[str] = None  # track filename; mutually exclusive with tts
+    duration: int = 45
+    caption_speed: float = 1.0
+    transition: str = "fade"
     out: str = "video.mp4"
 
 
@@ -68,6 +71,9 @@ def _run_job(job: Job, req: GenerateRequest) -> None:
             tts=req.tts,
             voice=req.voice or None,
             music=req.music or None,
+            duration=req.duration,
+            caption_speed=req.caption_speed,
+            transition=req.transition,
             log=log,
         )
 

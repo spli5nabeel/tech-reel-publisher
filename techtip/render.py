@@ -18,7 +18,9 @@ def render_tip(
     out_path = out_path.resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    props = tip.model_dump(by_alias=True)
+    # exclude_none=True keeps null fields absent so Zod's .optional() sees
+    # undefined (valid) instead of null (invalid for non-nullable fields).
+    props = tip.model_dump(by_alias=True, exclude_none=True)
     if bg_style is not None:
         props["bgStyle"] = bg_style
     if bg_color is not None:

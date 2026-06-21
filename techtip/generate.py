@@ -27,15 +27,23 @@ Scene types (use camelCase keys exactly as shown):
   mascot:  {"type":"mascot","durationInSeconds":<number>,"narration":"<string>","emotion":"happy","message":"<string>"}
 
 Rules:
-- 4 to 6 scenes total; total durationInSeconds must be between 25 and 40.
+- Scene count and total duration are set by the user message — follow them exactly.
 - First scene must be type "kinetic" (the hook).
 - Last scene must be type "mascot" (the call to action / CTA).
 - Every scene must have a non-empty narration string.
 - Output ONLY the JSON object. No other text before or after it."""
 
 
-def _user_prompt(topic: str) -> str:
-    return f"Generate a tech-tip video script about: {topic}"
+def _user_prompt(topic: str, target_seconds: int = 45) -> str:
+    min_scenes = max(3, target_seconds // 12)
+    max_scenes = min(10, max(min_scenes + 2, target_seconds // 7))
+    min_dur = int(target_seconds * 0.85)
+    max_dur = int(target_seconds * 1.15)
+    return (
+        f"Generate a tech-tip video script about: {topic}\n\n"
+        f"Target: {min_scenes}–{max_scenes} scenes, "
+        f"{min_dur}–{max_dur} seconds total (sum of durationInSeconds)."
+    )
 
 
 def _parse(raw: str) -> Tip:
@@ -69,7 +77,7 @@ def _parse(raw: str) -> Tip:
     )
 
 
-def _generate_cli(topic: str) -> Tip:
+def _generate_cli(topic: str, target_seconds: int = 45) -> Tip:
     if not shutil.which("claude"):
         raise RuntimeError(
             "Claude Code CLI not found. Install it and log in: https://claude.ai/code"
@@ -77,7 +85,7 @@ def _generate_cli(topic: str) -> Tip:
 
     cmd = [
         "claude",
-        "-p", _user_prompt(topic),
+        "-p", _user_prompt(topic, target_seconds),
         "--append-system-prompt", SYSTEM,
         "--output-format", "json",
         "--max-turns", "1",
@@ -104,7 +112,7 @@ def _generate_cli(topic: str) -> Tip:
     return _parse(raw)
 
 
-def _generate_api(topic: str) -> Tip:
+def _generate_api(topic: str, target_seconds: int = 45) -> Tip:
     try:
         import anthropic
     except ImportError:
@@ -122,19 +130,19 @@ def _generate_api(topic: str) -> Tip:
         model="claude-opus-4-8",
         max_tokens=2048,
         system=SYSTEM,
-        messages=[{"role": "user", "content": _user_prompt(topic)}],
+        messages=[{"role": "user", "content": _user_prompt(topic, target_seconds)}],
     )
 
     raw = message.content[0].text
     return _parse(raw)
 
 
-def generate_tip(topic: str) -> Tip:
+def generate_tip(topic: str, target_seconds: int = 45) -> Tip:
     backend = os.environ.get("TECHTIP_GEN_BACKEND", "cli").lower()
     if backend == "cli":
-        return _generate_cli(topic)
+        return _generate_cli(topic, target_seconds)
     if backend == "api":
-        return _generate_api(topic)
+        return _generate_api(topic, target_seconds)
     raise ValueError(
         f"Unknown TECHTIP_GEN_BACKEND: {backend!r}. Use 'cli' or 'api'."
     )

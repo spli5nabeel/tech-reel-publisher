@@ -54,7 +54,7 @@ export const SceneSchema = z.discriminatedUnion("type", [
   MascotSceneSchema,
 ]);
 
-export const BG_STYLES = ["particles", "gradient", "grid", "shapes"] as const;
+export const BG_STYLES = ["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain"] as const;
 export type BgStyle = (typeof BG_STYLES)[number];
 
 export const TipSchema = z.object({
@@ -63,6 +63,8 @@ export const TipSchema = z.object({
   audio: z.string().nullable().default(null),
   bgStyle: z.enum(BG_STYLES).optional(),
   bgColor: z.string().optional(),
+  captionSpeed: z.number().default(1.0),
+  transition: z.enum(["fade", "slide-left", "zoom", "none"]).default("fade"),
   scenes: z.array(SceneSchema),
 });
 

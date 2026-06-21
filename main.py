@@ -20,7 +20,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--bg",
-        choices=["particles", "gradient", "grid", "shapes", "random"],
+        choices=["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain", "random"],
         default="random",
         help="Background animation style (default: random — derived from topic)",
     )
@@ -47,6 +47,27 @@ def main() -> None:
         help="Background-music filename from remotion/public/music/ "
              "(mutually exclusive with --tts; music takes precedence)",
     )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=45,
+        choices=[30, 45, 60, 90],
+        help="Target video duration in seconds (default: 45)",
+    )
+    parser.add_argument(
+        "--speed",
+        type=float,
+        default=1.0,
+        metavar="FLOAT",
+        help="Caption highlight speed multiplier, e.g. 1.5 (default: 1.0). "
+             "In TTS mode this also adjusts the speaking rate.",
+    )
+    parser.add_argument(
+        "--transition",
+        default="fade",
+        choices=["fade", "slide-left", "zoom", "none"],
+        help="Scene transition style (default: fade)",
+    )
     args = parser.parse_args()
 
     bg_style = None if args.bg == "random" else args.bg
@@ -58,6 +79,9 @@ def main() -> None:
         tts=args.tts,
         voice=args.voice,
         music=args.music,
+        duration=args.duration,
+        caption_speed=args.speed,
+        transition=args.transition,
     )
     print(f"Rendered: {out_path}")
 

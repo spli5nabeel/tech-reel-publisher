@@ -406,6 +406,9 @@ select.field{
             <button type="button" class="seg-btn" id="seg-music" onclick="setAudioMode('music')">
               Background music
             </button>
+            <button type="button" class="seg-btn" id="seg-none" onclick="setAudioMode('none')">
+              No audio
+            </button>
           </div>
           <div class="voice-row visible" id="voice-row" style="margin-top:8px">
             <select id="voice" class="field">
@@ -589,14 +592,14 @@ select.field{
     document.getElementById('speed-label').textContent = v + '×';
   }
 
-  /* ── Audio mode (voice / music) ─────────────────────────── */
+  /* ── Audio mode (voice / music / none) ─────────────────────────── */
   function setAudioMode(mode) {
     audioMode = mode;
-    const isVoice = mode === 'voice';
-    document.getElementById('seg-voice').classList.toggle('active', isVoice);
-    document.getElementById('seg-music').classList.toggle('active', !isVoice);
-    document.getElementById('voice-row').classList.toggle('visible', isVoice);
-    document.getElementById('music-row').classList.toggle('visible', !isVoice);
+    document.getElementById('seg-voice').classList.toggle('active', mode === 'voice');
+    document.getElementById('seg-music').classList.toggle('active', mode === 'music');
+    document.getElementById('seg-none').classList.toggle('active',  mode === 'none');
+    document.getElementById('voice-row').classList.toggle('visible', mode === 'voice');
+    document.getElementById('music-row').classList.toggle('visible', mode === 'music');
   }
 
   /* ── Color sync ─────────────────────────────────────────── */
@@ -646,6 +649,7 @@ select.field{
     const topic = document.getElementById('topic').value.trim();
     if (!topic) { document.getElementById('topic').focus(); return; }
 
+    const isVoice = audioMode === 'voice';
     const isMusic = audioMode === 'music';
     const track   = document.getElementById('music').value;
     if (isMusic && !track) {
@@ -671,8 +675,8 @@ select.field{
           topic,
           bg:            document.getElementById('bg').value,
           bg_color:      document.getElementById('bg-color-hex').value,
-          tts:           !isMusic,
-          voice:         !isMusic ? document.getElementById('voice').value : null,
+          tts:           isVoice,
+          voice:         isVoice ? document.getElementById('voice').value : null,
           music:         isMusic ? track : null,
           duration:      duration,
           caption_speed: parseFloat(document.getElementById('speed').value),

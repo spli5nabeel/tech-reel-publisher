@@ -7,7 +7,7 @@ import { topicToBgStyle, BgStyle } from "./Background";
 const MUSIC_VOLUME = 0.5;
 const TRANSITION_FRAMES = 15; // 0.5 s at 30 fps
 
-type TransitionType = "fade" | "slide-left" | "zoom" | "none";
+type TransitionType = "fade" | "slide-left" | "zoom" | "none" | "slide-up" | "wipe" | "blur-fade";
 
 // Wraps a scene and applies entry/exit transition effects using local frame time.
 const TransitionWrapper: React.FC<{
@@ -41,6 +41,26 @@ const TransitionWrapper: React.FC<{
     style.transform = `scale(${entryScale * exitScale})`;
     style.transformOrigin = "center center";
     style.opacity = entry * (1 - exit);
+  } else if (transition === "slide-up") {
+    const entryY = isFirst ? 0 : interpolate(entry, [0, 1], [1920, 0]);
+    const exitY  = isLast  ? 0 : interpolate(exit,  [0, 1], [0, -1920]);
+    style.transform = `translateY(${entryY + exitY}px)`;
+  } else if (transition === "wipe") {
+    const rightPct = (1 - entry) * 100;
+    const leftPct  = exit * 100;
+    style.clipPath = `inset(0 ${rightPct.toFixed(1)}% 0 ${leftPct.toFixed(1)}%)`;
+  } else if (transition === "blur-fade") {
+    const clamp = { extrapolateLeft: "clamp" as const, extrapolateRight: "clamp" as const };
+    const entryOpacity = isFirst ? 1 : interpolate(entry, [0, 1], [0, 1], clamp);
+    const exitOpacity  = isLast  ? 1 : interpolate(exit,  [0, 1], [1, 0], clamp);
+    const entryScale   = isFirst ? 1 : interpolate(entry, [0, 1], [1.05, 1], clamp);
+    const exitScale    = isLast  ? 1 : interpolate(exit,  [0, 1], [1, 0.96], clamp);
+    const entryBlur    = isFirst ? 0 : interpolate(entry, [0, 1], [10, 0], clamp);
+    const exitBlur     = isLast  ? 0 : interpolate(exit,  [0, 1], [0, 8],  clamp);
+    style.opacity = entryOpacity * exitOpacity;
+    style.transform = `scale(${entryScale * exitScale})`;
+    style.transformOrigin = "center center";
+    style.filter = `blur(${(entryBlur + exitBlur).toFixed(1)}px)`;
   }
 
   return <div style={style}>{children}</div>;

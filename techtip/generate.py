@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -51,6 +52,16 @@ def _user_prompt(topic: str, target_seconds: int = 45) -> str:
     )
 
 
+def _cli_prompt(topic: str, target_seconds: int = 45) -> str:
+    """Embeds system instructions in the user turn — the only reliable way
+    to override Claude Code CLI's built-in system prompt."""
+    return (
+        f"{SYSTEM}\n\n"
+        f"{_user_prompt(topic, target_seconds)}\n\n"
+        f"Output ONLY the JSON object. No markdown, no headers, no prose."
+    )
+
+
 def _parse(raw: str) -> Tip:
     text = raw.strip()
 
@@ -83,39 +94,56 @@ def _parse(raw: str) -> Tip:
 
 
 def _generate_cli(topic: str, target_seconds: int = 45) -> Tip:
-    if not shutil.which("claude"):
+    claude_exec = shutil.which("claude")
+    if not claude_exec:
         raise RuntimeError(
             "Claude Code CLI not found. Install it and log in: https://claude.ai/code"
         )
 
-    cmd = [
-        "claude",
-        "-p", _user_prompt(topic, target_seconds),
-        "--append-system-prompt", SYSTEM,
-        "--output-format", "json",
-        "--max-turns", "1",
-        "--no-tools",
-    ]
+    timeout = int(os.environ.get("TECHTIP_CLI_TIMEOUT", "300"))
+
+    # Pass the prompt via stdin rather than a -p argument.
+    # On Windows, cmd.exe mishandles \" inside quoted strings — the JSON examples
+    # in our prompt contain many " characters that list2cmdline escapes as \",
+    # which cmd.exe interprets as ending the quoted string, garbling the prompt.
+    # Stdin bypasses all shell-escaping entirely.
+    # -p without an argument puts claude in print mode and reads the prompt from stdin.
+    if sys.platform == "win32":
+        # .cmd files cannot run without a shell; invoke via cmd.exe /c explicitly
+        # so we can still use shell=False and avoid the escaping problem.
+        cmd = ["cmd.exe", "/c", claude_exec,
+               "-p", "--output-format", "text", "--max-turns", "1"]
+    else:
+        cmd = ["claude",
+               "-p", "--output-format", "text", "--max-turns", "1"]
+
+    # Run from home dir to avoid loading the project's CLAUDE.md and MCP servers.
+    run_cwd = Path.home()
     try:
         result = subprocess.run(
             cmd,
+            input=_cli_prompt(topic, target_seconds),
             capture_output=True,
             text=True,
             encoding="utf-8",
             check=True,
-            timeout=300,
-            shell=(sys.platform == "win32"),
+            timeout=timeout,
+            cwd=run_cwd,
+            shell=False,
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(
+            f"Claude CLI timed out after {timeout}s.\n"
+            "Options:\n"
+            "  1. Increase timeout: set TECHTIP_CLI_TIMEOUT=600 in .env\n"
+            "  2. Switch to API backend (faster & more reliable on Windows):\n"
+            "       TECHTIP_GEN_BACKEND=api\n"
+            "       ANTHROPIC_API_KEY=<your-key>"
         )
     except subprocess.CalledProcessError as exc:
         raise RuntimeError(f"Claude CLI failed:\n{exc.stderr}") from exc
 
-    try:
-        data = json.loads(result.stdout)
-        raw = data.get("result", result.stdout)
-    except json.JSONDecodeError:
-        raw = result.stdout
-
-    return _parse(raw)
+    return _parse(result.stdout)
 
 
 def _generate_api(topic: str, target_seconds: int = 45) -> Tip:

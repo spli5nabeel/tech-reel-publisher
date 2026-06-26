@@ -2,7 +2,7 @@ import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { theme } from "./theme";
 
-export type BgStyle = "particles" | "gradient" | "grid" | "shapes" | "aurora-waves" | "neon-pulse" | "matrix-rain";
+export type BgStyle = "particles" | "gradient" | "grid" | "shapes" | "aurora-waves" | "neon-pulse" | "matrix-rain" | "bokeh" | "starfield" | "circuit-board";
 
 // ── Particles — drifting star field ──────────────────────────────────────────
 
@@ -262,23 +262,153 @@ const MatrixRainBg: React.FC = () => {
   );
 };
 
+// ── Bokeh — drifting defocused light orbs ────────────────────────────────────
+
+const BokehBg: React.FC = () => {
+  const frame = useCurrentFrame();
+  const count = 22;
+  const colors = [theme.colors.accent, theme.colors.accentCyan, theme.colors.accentAlt, "#f59e0b"];
+  return (
+    <svg style={{ position: "absolute", inset: 0 }} width={1080} height={1920}>
+      {Array.from({ length: count }, (_, i) => {
+        const phi  = (i * 0.6180339887) % 1;
+        const phi2 = (i * 0.3819660113) % 1;
+        const speed = 0.25 + phi * 0.6;
+        const x = phi * 1080;
+        const y = ((phi2 * 2300 + frame * speed) % 2300) - 200;
+        const r = 55 + phi * 140;
+        const col = colors[i % colors.length];
+        const pulse = Math.sin(frame * 0.02 + phi * Math.PI * 2) * 0.5 + 0.5;
+        return (
+          <g key={i}>
+            <circle cx={x} cy={y} r={r * 1.9} fill={col} opacity={0.025 + pulse * 0.015} />
+            <circle cx={x} cy={y} r={r * 1.3} fill={col} opacity={0.04  + pulse * 0.025} />
+            <circle cx={x} cy={y} r={r}       fill={col} opacity={0.07  + phi   * 0.07}  />
+            <circle cx={x} cy={y} r={r * 0.4} fill={col} opacity={0.14  + phi   * 0.1}   />
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── Starfield — warp-speed star streaks ──────────────────────────────────────
+
+const StarfieldBg: React.FC = () => {
+  const frame = useCurrentFrame();
+  const count = 180;
+  const cx = 540, cy = 960;
+
+  return (
+    <svg style={{ position: "absolute", inset: 0 }} width={1080} height={1920}>
+      {Array.from({ length: count }, (_, i) => {
+        const phi  = (i * 0.6180339887) % 1;
+        const phi2 = (i * 0.3819660113) % 1;
+        const angle = phi * Math.PI * 2;
+        const z = ((frame * 1.1 + phi2 * 120) % 120) / 120;
+        const dist = 8 + z * 700;
+        const x = cx + Math.cos(angle) * dist;
+        const y = cy + Math.sin(angle) * dist;
+        if (x < -20 || x > 1100 || y < -20 || y > 1940) return null;
+        const r = interpolate(z, [0, 1], [0.5, 2.5]);
+        const opacity = interpolate(z, [0, 0.04, 0.85, 1], [0, 0.7, 0.9, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+        const col = i % 5 === 0 ? theme.colors.accent
+                  : i % 5 === 1 ? theme.colors.accentCyan
+                  : "#ffffff";
+        const streakLen = z > 0.55 ? interpolate(z, [0.55, 1], [0, 20], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 0;
+        const trailX = x - Math.cos(angle) * streakLen;
+        const trailY = y - Math.sin(angle) * streakLen;
+        return (
+          <g key={i} opacity={opacity}>
+            {streakLen > 0 && (
+              <line x1={trailX} y1={trailY} x2={x} y2={y}
+                stroke={col} strokeWidth={r * 0.7} />
+            )}
+            <circle cx={x} cy={y} r={r} fill={col} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── Circuit Board — PCB grid with traveling signal pulses ─────────────────────
+
+const CircuitBoardBg: React.FC = () => {
+  const frame = useCurrentFrame();
+  const COLS = 6, ROWS = 11;
+  const gx = 1080 / (COLS + 1);
+  const gy = 1920 / (ROWS + 1);
+
+  type Edge = { x1: number; y1: number; x2: number; y2: number };
+  const edges: Edge[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS - 1; c++) {
+      if ((r * 3 + c * 7) % 4 !== 0)
+        edges.push({ x1: (c+1)*gx, y1: (r+1)*gy, x2: (c+2)*gx, y2: (r+1)*gy });
+    }
+  }
+  for (let r = 0; r < ROWS - 1; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if ((r * 5 + c * 3) % 3 !== 0)
+        edges.push({ x1: (c+1)*gx, y1: (r+1)*gy, x2: (c+1)*gx, y2: (r+2)*gy });
+    }
+  }
+
+  return (
+    <svg style={{ position: "absolute", inset: 0 }} width={1080} height={1920}>
+      {edges.map((e, i) => (
+        <line key={`e${i}`} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
+          stroke={theme.colors.accent} strokeWidth={1} opacity={0.13} />
+      ))}
+      {Array.from({ length: ROWS }, (_, r) =>
+        Array.from({ length: COLS }, (_, c) => {
+          const hi = (r * COLS + c) % 7 === 0;
+          return (
+            <circle key={`n${r}-${c}`}
+              cx={(c+1)*gx} cy={(r+1)*gy} r={hi ? 7 : 4}
+              fill={hi ? theme.colors.accentCyan : theme.colors.accent}
+              opacity={hi ? 0.38 : 0.22} />
+          );
+        })
+      )}
+      {edges.map((e, i) => {
+        const phi = (i * 0.6180339887) % 1;
+        const t = ((frame * (0.006 + phi * 0.009) + phi) % 1);
+        const sx = e.x1 + (e.x2 - e.x1) * t;
+        const sy = e.y1 + (e.y2 - e.y1) * t;
+        const col = i % 3 === 0 ? theme.colors.accentCyan : theme.colors.accent;
+        return (
+          <g key={`s${i}`}>
+            <circle cx={sx} cy={sy} r={9} fill={col} opacity={0.12} />
+            <circle cx={sx} cy={sy} r={4} fill={col} opacity={0.55} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 interface Props { style: BgStyle; }
 
 export const Background: React.FC<Props> = ({ style }) => (
   <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-    {style === "particles"    && <ParticlesBg   />}
-    {style === "gradient"     && <GradientBg    />}
-    {style === "grid"         && <GridBg        />}
-    {style === "shapes"       && <ShapesBg      />}
-    {style === "aurora-waves" && <AuroraWavesBg />}
-    {style === "neon-pulse"   && <NeonPulseBg   />}
-    {style === "matrix-rain"  && <MatrixRainBg  />}
+    {style === "particles"     && <ParticlesBg    />}
+    {style === "gradient"      && <GradientBg     />}
+    {style === "grid"          && <GridBg         />}
+    {style === "shapes"        && <ShapesBg       />}
+    {style === "aurora-waves"  && <AuroraWavesBg  />}
+    {style === "neon-pulse"    && <NeonPulseBg    />}
+    {style === "matrix-rain"   && <MatrixRainBg   />}
+    {style === "bokeh"         && <BokehBg        />}
+    {style === "starfield"     && <StarfieldBg    />}
+    {style === "circuit-board" && <CircuitBoardBg />}
   </div>
 );
 
-const BG_STYLES: BgStyle[] = ["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain"];
+const BG_STYLES: BgStyle[] = ["particles", "gradient", "grid", "shapes", "aurora-waves", "neon-pulse", "matrix-rain", "bokeh", "starfield", "circuit-board"];
 
 export function topicToBgStyle(topic: string): BgStyle {
   const hash = Array.from(topic).reduce((acc, c) => ((acc * 31 + c.charCodeAt(0)) & 0xffff), 0);

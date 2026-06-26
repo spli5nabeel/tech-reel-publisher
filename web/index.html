@@ -330,6 +330,39 @@ select.field{
 }
 .meta-placeholder svg{opacity:.3}
 .meta-placeholder p{font-size:12px;line-height:1.5}
+
+/* ── Batch panel ─────────────────────────────────────────── */
+#single-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#batch-view{display:none;flex:1;flex-direction:column;overflow:hidden}
+.batch-header{
+  padding:14px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-shrink:0;
+}
+.batch-counter{font-size:14px;font-weight:600;color:var(--text)}
+.batch-results-body{
+  flex:1;overflow-y:auto;padding:16px 24px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.batch-results-body::-webkit-scrollbar{width:4px}
+.batch-results-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.batch-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:11px 16px;
+}
+.batch-icon{font-size:14px;flex-shrink:0;width:16px;text-align:center}
+.batch-topic{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.batch-actions{display:flex;gap:6px;flex-shrink:0}
+.mini-btn{
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  text-decoration:none;cursor:pointer;display:inline-block;
+  transition:border-color .15s,background .15s;
+}
+.mini-btn:hover{border-color:var(--accent);background:rgba(168,85,247,.1)}
+.mini-btn.disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.batch-empty{color:var(--muted);font-size:13px;text-align:center;padding:40px}
 </style>
 </head>
 <body>
@@ -351,11 +384,21 @@ select.field{
     <aside class="sidebar">
       <div class="sidebar-body">
 
+        <!-- Mode -->
+        <div class="section">
+          <div class="section-label">Mode</div>
+          <div class="seg">
+            <button type="button" class="seg-btn active" id="seg-single" onclick="setMode('single')">Single</button>
+            <button type="button" class="seg-btn" id="seg-batch" onclick="setMode('batch')">Batch</button>
+          </div>
+        </div>
+
         <!-- Topic -->
         <div class="section">
-          <div class="section-label">Topic</div>
+          <div class="section-label" id="topic-label">Topic</div>
           <textarea id="topic" class="field" rows="3"
             placeholder="e.g. Python list comprehensions, Git stash tricks, Docker basics…"></textarea>
+          <p class="seg-hint" id="topic-hint" style="display:none">One topic per line. Lines starting with # are ignored.</p>
         </div>
 
         <!-- Background -->
@@ -370,6 +413,9 @@ select.field{
             <option value="aurora-waves">Aurora Waves</option>
             <option value="neon-pulse">Neon Pulse</option>
             <option value="matrix-rain">Matrix Rain</option>
+            <option value="bokeh">Bokeh Orbs</option>
+            <option value="starfield">Starfield</option>
+            <option value="circuit-board">Circuit Board</option>
           </select>
         </div>
 
@@ -378,8 +424,11 @@ select.field{
           <div class="section-label">Transition</div>
           <select id="transition" class="field">
             <option value="fade">Fade</option>
-            <option value="slide-left">Slide</option>
+            <option value="slide-left">Slide Left</option>
+            <option value="slide-up">Slide Up</option>
             <option value="zoom">Zoom</option>
+            <option value="wipe">Wipe</option>
+            <option value="blur-fade">Blur Fade</option>
             <option value="none">None (hard cut)</option>
           </select>
         </div>
@@ -442,7 +491,7 @@ select.field{
         </div>
 
         <!-- Output filename -->
-        <div class="section">
+        <div class="section" id="section-out">
           <div class="section-label">Output filename</div>
           <input type="text" id="out" class="field" value="video.mp4" />
         </div>
@@ -463,6 +512,8 @@ select.field{
     <!-- ── Preview ── -->
     <main class="preview">
 
+      <!-- Single mode -->
+      <div id="single-view">
       <div class="preview-top">
 
         <!-- Left: phone column -->
@@ -564,6 +615,34 @@ select.field{
           <span class="log-line info">Waiting to start…</span>
         </div>
       </div>
+      </div><!-- /single-view -->
+
+      <!-- Batch mode -->
+      <div id="batch-view">
+        <div class="batch-header">
+          <span class="batch-counter" id="batch-counter-text">Ready — enter topics and click Generate Batch</span>
+          <button id="batch-zip-btn" class="btn-download" disabled onclick="downloadBatchZip()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download All (ZIP)
+          </button>
+        </div>
+        <div class="batch-results-body" id="batch-results-body">
+          <div class="batch-empty">Topics will appear here once the batch starts.</div>
+        </div>
+        <div class="log-panel">
+          <div class="log-header">
+            <span>Batch log</span>
+            <span id="batch-log-status" style="color:var(--muted)">—</span>
+          </div>
+          <div class="log-body" id="batch-log-body">
+            <span class="log-line info">Waiting to start…</span>
+          </div>
+        </div>
+      </div><!-- /batch-view -->
 
     </main>
   </div>
@@ -572,11 +651,14 @@ select.field{
 <script>
   let jobId        = null;
   let timer        = null;
-  let audioMode    = 'voice';  // 'voice' | 'music'
+  let audioMode    = 'voice';  // 'voice' | 'music' | 'none'
+  let appMode      = 'single'; // 'single' | 'batch'
   let duration     = 45;
   let dlUrl        = null;
   let lastStatus   = null;
   let currentTags  = [];
+  let batchJobId   = null;
+  let batchTimer   = null;
 
   /* ── Duration pills ────────────────────────────────────── */
   function setDuration(s) {
@@ -584,6 +666,30 @@ select.field{
     [30, 45, 60, 90].forEach(v => {
       document.getElementById('dur-' + v).classList.toggle('active', v === s);
     });
+  }
+
+  /* ── App mode (single / batch) ──────────────────────────── */
+  function setMode(m) {
+    appMode = m;
+    document.getElementById('seg-single').classList.toggle('active', m === 'single');
+    document.getElementById('seg-batch').classList.toggle('active',  m === 'batch');
+    document.getElementById('single-view').style.display = m === 'single' ? ''     : 'none';
+    document.getElementById('batch-view').style.display  = m === 'batch'  ? 'flex' : 'none';
+    document.getElementById('section-out').style.display = m === 'single' ? ''     : 'none';
+    const topicEl = document.getElementById('topic');
+    const hintEl  = document.getElementById('topic-hint');
+    if (m === 'batch') {
+      topicEl.rows        = 7;
+      topicEl.placeholder = 'Python list comprehensions\nGit stash tricks\nDocker basics\n…one topic per line';
+      document.getElementById('topic-label').textContent = 'Topics';
+      hintEl.style.display = '';
+    } else {
+      topicEl.rows        = 3;
+      topicEl.placeholder = 'e.g. Python list comprehensions, Git stash tricks, Docker basics…';
+      document.getElementById('topic-label').textContent = 'Topic';
+      hintEl.style.display = 'none';
+    }
+    setBusy(false);
   }
 
   /* ── Speed label ────────────────────────────────────────── */
@@ -646,6 +752,7 @@ select.field{
 
   /* ── Submit ─────────────────────────────────────────────── */
   async function submitForm() {
+    if (appMode === 'batch') { submitBatch(); return; }
     const topic = document.getElementById('topic').value.trim();
     if (!topic) { document.getElementById('topic').focus(); return; }
 
@@ -722,10 +829,17 @@ select.field{
 
   /* ── Helpers ────────────────────────────────────────────── */
   function setBusy(busy) {
-    document.getElementById('generate-btn').disabled = busy;
-    document.getElementById('generate-btn').innerHTML = busy
-      ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg> Generating…`
-      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Video`;
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = busy;
+    const spinSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg>`;
+    const playSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    if (busy) {
+      btn.innerHTML = spinSvg + (appMode === 'batch' ? ' Generating batch…' : ' Generating…');
+    } else if (appMode === 'batch') {
+      btn.innerHTML = playSvg + ' Generate Batch';
+    } else {
+      btn.innerHTML = playSvg + ' Generate Video';
+    }
   }
 
   function setStatus(type, text) {
@@ -851,6 +965,117 @@ select.field{
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
     setTimeout(() => { btn.textContent = resetLabel; btn.classList.remove('copied'); }, 2000);
+  }
+
+  /* ── Batch submit ───────────────────────────────────────── */
+  async function submitBatch() {
+    const raw    = document.getElementById('topic').value;
+    const topics = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+    if (!topics.length) { document.getElementById('topic').focus(); return; }
+
+    const isVoice = audioMode === 'voice';
+    const isMusic = audioMode === 'music';
+    const track   = document.getElementById('music').value;
+    if (isMusic && !track) {
+      setStatus('error', 'No track');
+      return;
+    }
+
+    setBusy(true);
+    batchJobId = null;
+    document.getElementById('batch-results-body').innerHTML = '<div class="batch-empty">Starting…</div>';
+    document.getElementById('batch-log-body').innerHTML     = '<span class="log-line info">Starting…</span>';
+    document.getElementById('batch-zip-btn').disabled = true;
+    document.getElementById('batch-counter-text').textContent = `0 / ${topics.length} done`;
+
+    try {
+      const res = await fetch('/batch', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topics,
+          bg:            document.getElementById('bg').value,
+          bg_color:      document.getElementById('bg-color-hex').value,
+          tts:           isVoice,
+          voice:         isVoice ? document.getElementById('voice').value : null,
+          music:         isMusic ? track : null,
+          duration,
+          caption_speed: parseFloat(document.getElementById('speed').value),
+          transition:    document.getElementById('transition').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setBusy(false); renderBatchLog('Error: ' + (data.detail || 'Unknown')); return; }
+      batchJobId = data.job_id;
+      batchTimer = setInterval(pollBatch, 2500);
+    } catch (err) {
+      setBusy(false);
+      renderBatchLog('Network error: ' + err.message);
+    }
+  }
+
+  async function pollBatch() {
+    if (!batchJobId) return;
+    try {
+      const data = await (await fetch(`/batch/${batchJobId}`)).json();
+      renderBatchLog(data.log || '');
+      renderBatchResults(data, batchJobId);
+      if (data.status === 'done' || data.status === 'error') {
+        clearInterval(batchTimer);
+        setBusy(false);
+        if (data.done > 0) document.getElementById('batch-zip-btn').disabled = false;
+      }
+    } catch {}
+  }
+
+  function renderBatchResults(data, jobId) {
+    const total  = data.total  || 0;
+    const done   = data.done   || 0;
+    const failed = data.failed || 0;
+    document.getElementById('batch-counter-text').textContent =
+      `${done} / ${total} done` + (failed ? ` — ${failed} failed` : '');
+
+    const rows = (data.results || []).map((r, i) => {
+      const icon  = r.status === 'done'    ? '✓'
+                  : r.status === 'error'   ? '✗'
+                  : r.status === 'running' ? '⟳' : '○';
+      const color = r.status === 'done'    ? 'var(--success)'
+                  : r.status === 'error'   ? 'var(--error)'
+                  : r.status === 'running' ? 'var(--warning)' : 'var(--muted)';
+      const vidBtn  = r.has_video  ? `<a href="/batch/${jobId}/video/${i}"  download class="mini-btn">MP4</a>`
+                                   : `<span class="mini-btn disabled">MP4</span>`;
+      const jsonBtn = r.has_script ? `<a href="/batch/${jobId}/script/${i}" download class="mini-btn">JSON</a>`
+                                   : `<span class="mini-btn disabled">JSON</span>`;
+      const tip = r.error ? ` title="${escHtml(r.error)}"` : '';
+      return `<div class="batch-row"${tip}>
+        <span class="batch-icon" style="color:${color}">${icon}</span>
+        <span class="batch-topic">${escHtml(r.topic)}</span>
+        <span class="batch-actions">${vidBtn}${jsonBtn}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('batch-results-body').innerHTML = rows || '<div class="batch-empty">Starting…</div>';
+  }
+
+  function renderBatchLog(raw) {
+    const body  = document.getElementById('batch-log-body');
+    const lines = raw.split('\n').filter(l => l.trim());
+    body.innerHTML = lines.map(l => {
+      const cls = l.includes('ERROR') || l.includes('Error') ? 'err'
+                : l.includes('Done') || l.includes('complete') ? 'ok'
+                : l.includes('Script ready') || l.includes('Rendering') ? 'step'
+                : 'info';
+      return `<span class="log-line ${cls}">&gt; ${escHtml(l)}</span>`;
+    }).join('\n') || '<span class="log-line info">&gt; Waiting…</span>';
+    body.scrollTop = body.scrollHeight;
+    document.getElementById('batch-log-status').textContent = lines[lines.length - 1] || '';
+  }
+
+  function downloadBatchZip() {
+    if (!batchJobId) return;
+    const a    = document.createElement('a');
+    a.href     = `/batch/${batchJobId}/zip`;
+    a.download = `batch_${batchJobId}.zip`;
+    a.click();
   }
 
   /* ── Init ───────────────────────────────────────────────── */

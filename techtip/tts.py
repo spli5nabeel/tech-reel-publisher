@@ -1,33 +1,41 @@
-import asyncio
 import os
+import subprocess
+import sys
 from pathlib import Path
 
-import edge_tts
 from mutagen.mp3 import MP3
 
-from techtip.schema import Tip, WordTiming
+from techtip.schema import Tip
 
 DEFAULT_VOICE = "en-US-EricNeural"
-TAIL_PADDING = 0.4  # seconds of breathing room after the audio file ends
-TICKS_PER_SECOND = 10_000_000  # edge-tts offsets are in 100-nanosecond ticks
+TAIL_PADDING = 0.4  # seconds of silence buffer after audio ends
+
+# Prefer the venv bundled with this project so we always use the up-to-date
+# edge-tts (which includes the Sec-MS-GEC DRM token).  Fall back to whatever
+# Python is on PATH if the venv doesn't exist.
+_PROJECT_ROOT = Path(__file__).parent.parent
+_VENV_EDGE_TTS = (
+    _PROJECT_ROOT / ".venv" / "Scripts" / "edge-tts.exe"  # Windows
+    if sys.platform == "win32"
+    else _PROJECT_ROOT / ".venv" / "bin" / "edge-tts"
+)
+_EDGE_TTS_CMD: list[str] = (
+    [str(_VENV_EDGE_TTS)]
+    if _VENV_EDGE_TTS.exists()
+    else [sys.executable, "-m", "edge_tts"]
+)
 
 
-async def _synthesize_scene(text: str, voice: str, out_path: Path, rate: str = "+0%") -> list[WordTiming]:
-    """Synthesise speech, write MP3, and return per-word timestamps."""
-    communicate = edge_tts.Communicate(text, voice, boundary="WordBoundary", rate=rate)
-    audio_chunks: list[bytes] = []
-    timings: list[WordTiming] = []
-
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_chunks.append(chunk["data"])
-        elif chunk["type"] == "WordBoundary":
-            start = chunk["offset"] / TICKS_PER_SECOND
-            end = start + chunk["duration"] / TICKS_PER_SECOND
-            timings.append(WordTiming(word=chunk["text"], start=round(start, 3), end=round(end, 3)))
-
-    out_path.write_bytes(b"".join(audio_chunks))
-    return timings
+def _synthesize_scene(text: str, voice: str, out_path: Path, rate: str = "+0%") -> None:
+    """Render narration to MP3 via the edge-tts CLI subprocess."""
+    result = subprocess.run(
+        [*_EDGE_TTS_CMD, "--text", text, "--voice", voice, "--rate", rate,
+         "--write-media", str(out_path)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"edge-tts failed: {result.stderr.strip()}")
 
 
 def _audio_duration(path: Path) -> float:
@@ -43,7 +51,6 @@ def synthesize_tip(
     public_dir = public_dir or (Path(__file__).parent.parent / "remotion" / "public")
     public_dir.mkdir(parents=True, exist_ok=True)
 
-    # Derive edge-tts rate from captionSpeed: 1.0→"+0%", 1.5→"+50%", 0.8→"-20%"
     speed = getattr(tip, "caption_speed", 1.0)
     rate_pct = int(round((speed - 1.0) * 100))
     rate = f"{rate_pct:+d}%"
@@ -52,19 +59,13 @@ def synthesize_tip(
     for i, scene in enumerate(tip.scenes):
         if scene.narration.strip():
             out_path = public_dir / f"vo_{i}.mp3"
-            timings = asyncio.run(_synthesize_scene(scene.narration, voice, out_path, rate=rate))
-            # Scene must contain the WHOLE audio file or the voice gets cut off.
-            # The MP3 is typically ~0.8s longer than the last word's end time
-            # (edge-tts adds natural trailing silence), so use the real file
-            # length and take the max as a safety net.
-            measured = _audio_duration(out_path)
-            last_word_end = timings[-1].end if timings else measured
-            duration = max(measured, last_word_end) + TAIL_PADDING
+            _synthesize_scene(scene.narration, voice, out_path, rate=rate)
+            duration = _audio_duration(out_path) + TAIL_PADDING
             updated_scenes.append(
                 scene.model_copy(update={
                     "audio_src": f"vo_{i}.mp3",
                     "duration_in_seconds": duration,
-                    "word_timings": timings,
+                    "word_timings": None,
                 })
             )
         else:

@@ -171,12 +171,25 @@ def _generate_api(topic: str, target_seconds: int = 45) -> Tip:
     return _parse(raw)
 
 
+def _enforce_cta(tip: Tip) -> Tip:
+    """Always end with a Like & Subscribe CTA regardless of what the AI wrote."""
+    from techtip.schema import MascotScene
+    last = tip.scenes[-1]
+    updated_last = last.model_copy(update={
+        "narration": "If you found this helpful, smash that like button and subscribe for more tech tips!",
+        **({"message": "Like & Subscribe!"} if isinstance(last, MascotScene) else {}),
+    })
+    return tip.model_copy(update={"scenes": [*tip.scenes[:-1], updated_last]})
+
+
 def generate_tip(topic: str, target_seconds: int = 45) -> Tip:
     backend = os.environ.get("TECHTIP_GEN_BACKEND", "cli").lower()
     if backend == "cli":
-        return _generate_cli(topic, target_seconds)
-    if backend == "api":
-        return _generate_api(topic, target_seconds)
-    raise ValueError(
-        f"Unknown TECHTIP_GEN_BACKEND: {backend!r}. Use 'cli' or 'api'."
-    )
+        tip = _generate_cli(topic, target_seconds)
+    elif backend == "api":
+        tip = _generate_api(topic, target_seconds)
+    else:
+        raise ValueError(
+            f"Unknown TECHTIP_GEN_BACKEND: {backend!r}. Use 'cli' or 'api'."
+        )
+    return _enforce_cta(tip)

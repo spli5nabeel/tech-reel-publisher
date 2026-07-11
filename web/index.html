@@ -363,6 +363,36 @@ select.field{
 .mini-btn:hover{border-color:var(--accent);background:rgba(168,85,247,.1)}
 .mini-btn.disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
 .batch-empty{color:var(--muted);font-size:13px;text-align:center;padding:40px}
+
+/* ── Header nav tabs ─────────────────────────────────────── */
+.header-nav{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
+.nav-btn{padding:6px 18px;border:none;border-radius:6px;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 12px var(--glow)}
+
+/* ── Library view ────────────────────────────────────────── */
+#library-view{flex:1;display:none;flex-direction:column;overflow:hidden;background:var(--bg)}
+.lib-header{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.lib-title{font-size:15px;font-weight:700}
+.lib-body{flex:1;overflow-y:auto;padding:16px 24px;display:flex;flex-direction:column;gap:8px}
+.lib-body::-webkit-scrollbar{width:4px}
+.lib-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.lib-row{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;transition:border-color .15s}
+.lib-row:hover{border-color:rgba(255,255,255,.15)}
+.lib-thumb{flex-shrink:0;width:54px;height:96px;border-radius:6px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
+.lib-thumb-video{width:54px;height:96px;object-fit:cover}
+.lib-thumb-icon{color:rgba(255,255,255,.2);font-size:20px}
+.lib-info{flex:1;min-width:0}
+.lib-topic{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lib-date{font-size:12px;color:var(--muted);margin-top:4px}
+.lib-status{flex-shrink:0;width:90px;text-align:center}
+.lib-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase}
+.lib-badge-pub{background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.3)}
+.lib-badge-draft{background:rgba(113,113,122,.15);color:var(--muted);border:1px solid var(--border)}
+.lib-actions{display:flex;gap:6px;flex-shrink:0}
+.lib-del-btn{color:var(--error);border-color:rgba(239,68,68,.3)}
+.lib-del-btn:hover{background:rgba(239,68,68,.1);border-color:var(--error)}
+.lib-empty{color:var(--muted);font-size:13px;text-align:center;padding:60px 20px}
 </style>
 </head>
 <body>
@@ -374,11 +404,15 @@ select.field{
       <div class="header-dot">▶</div>
       Tech Reels Studio
     </div>
+    <nav class="header-nav">
+      <button type="button" class="nav-btn active" id="nav-generate" onclick="switchView('generate')">Generate</button>
+      <button type="button" class="nav-btn" id="nav-library" onclick="switchView('library')">Library</button>
+    </nav>
     <div class="header-badge">BETA</div>
   </header>
 
   <!-- Workspace -->
-  <div class="workspace">
+  <div class="workspace" id="workspace">
 
     <!-- ── Sidebar ── -->
     <aside class="sidebar">
@@ -645,7 +679,22 @@ select.field{
       </div><!-- /batch-view -->
 
     </main>
+  </div><!-- /workspace -->
+
+  <!-- Library view -->
+  <div id="library-view">
+    <div class="lib-header">
+      <span class="lib-title">Library</span>
+      <button class="btn-download" onclick="loadLibrary()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div class="lib-body" id="lib-body">
+      <div class="lib-empty">Loading…</div>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -1076,6 +1125,89 @@ select.field{
     a.href     = `/batch/${batchJobId}/zip`;
     a.download = `batch_${batchJobId}.zip`;
     a.click();
+  }
+
+  /* ── View switcher (Generate / Library) ────────────────── */
+  function switchView(view) {
+    const workspace = document.getElementById('workspace');
+    const libView   = document.getElementById('library-view');
+    workspace.style.display = view === 'generate' ? '' : 'none';
+    libView.style.display   = view === 'library'  ? 'flex' : 'none';
+    document.getElementById('nav-generate').classList.toggle('active', view === 'generate');
+    document.getElementById('nav-library').classList.toggle('active',  view === 'library');
+    if (view === 'library') loadLibrary();
+  }
+
+  /* ── Library ────────────────────────────────────────────── */
+  async function loadLibrary() {
+    const body = document.getElementById('lib-body');
+    body.innerHTML = '<div class="lib-empty">Loading…</div>';
+    try {
+      const entries = await (await fetch('/library')).json();
+      renderLibrary(entries);
+    } catch {
+      body.innerHTML = '<div class="lib-empty">Failed to load library.</div>';
+    }
+  }
+
+  function renderLibrary(entries) {
+    const body = document.getElementById('lib-body');
+    if (!entries.length) {
+      body.innerHTML = '<div class="lib-empty">No videos yet — generate one to get started.</div>';
+      return;
+    }
+    body.innerHTML = entries.map(renderLibraryRow).join('');
+  }
+
+  function renderLibraryRow(e) {
+    const date = new Date(e.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
+    const badge = e.published
+      ? '<span class="lib-badge lib-badge-pub">Published</span>'
+      : '<span class="lib-badge lib-badge-draft">Draft</span>';
+    const pubBtn = e.published
+      ? `<button class="mini-btn" onclick="togglePublish('${e.id}',false)">Unpublish</button>`
+      : `<button class="mini-btn" onclick="togglePublish('${e.id}',true)">Publish</button>`;
+    const thumb = e.has_video
+      ? `<video src="/library/${e.id}/video" preload="metadata" muted playsinline class="lib-thumb-video"></video>`
+      : `<span class="lib-thumb-icon">▶</span>`;
+    return `<div class="lib-row" id="lib-row-${e.id}">
+      <div class="lib-thumb">${thumb}</div>
+      <div class="lib-info">
+        <div class="lib-topic">${escHtml(e.topic)}</div>
+        <div class="lib-date">${date}</div>
+      </div>
+      <div class="lib-status">${badge}</div>
+      <div class="lib-actions">
+        <a href="/library/${e.id}/download" download class="mini-btn">↓ Download</a>
+        ${pubBtn}
+        <button class="mini-btn lib-del-btn" onclick="deleteEntry('${e.id}')">Delete</button>
+      </div>
+    </div>`;
+  }
+
+  async function togglePublish(id, publish) {
+    try {
+      await fetch(`/library/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({published: publish}),
+      });
+      loadLibrary();
+    } catch {}
+  }
+
+  async function deleteEntry(id) {
+    if (!confirm('Delete this video permanently?')) return;
+    try {
+      const res = await fetch(`/library/${id}`, {method:'DELETE'});
+      if (!res.ok) return;
+      const row = document.getElementById('lib-row-' + id);
+      if (row) row.remove();
+      if (!document.querySelector('.lib-row')) {
+        document.getElementById('lib-body').innerHTML =
+          '<div class="lib-empty">No videos yet — generate one to get started.</div>';
+      }
+    } catch {}
   }
 
   /* ── Init ───────────────────────────────────────────────── */

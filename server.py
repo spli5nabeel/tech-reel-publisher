@@ -1,9 +1,11 @@
 import io
+import json
 import re
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -46,6 +48,20 @@ jobs: dict[str, Job] = {}
 def _safe_filename(topic: str) -> str:
     safe = re.sub(r"[^\w\s-]", "", topic.lower())
     return re.sub(r"[\s-]+", "_", safe).strip("_")[:80] or "video"
+
+
+def _write_lib_meta(job_id: str, topic: str, video_path: Path, youtube: dict | None) -> None:
+    meta = {
+        "id": job_id,
+        "topic": topic,
+        "filename": video_path.name,
+        "title": youtube.get("title", "") if youtube else "",
+        "description": youtube.get("description", "") if youtube else "",
+        "hashtags": youtube.get("hashtags", []) if youtube else [],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "published": False,
+    }
+    (OUT_DIR / f"{job_id}_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
 
 # ── Batch job store ───────────────────────────────────────────────────────────
@@ -127,6 +143,7 @@ def _run_job(job: Job, req: GenerateRequest) -> None:
         job.out_path = result
         job.meta = youtube
         job.status = "done"
+        _write_lib_meta(job.id, req.topic, result, youtube)
         log(f"Done — {result.name}")
     except Exception as exc:
         job.status = "error"
@@ -320,6 +337,91 @@ async def batch_zip(job_id: str):
         buf,
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="batch_{job_id}.zip"'},
+    )
+
+
+class LibraryPatch(BaseModel):
+    published: bool
+
+
+@app.get("/library")
+async def library_list():
+    entries = []
+    for meta_file in sorted(OUT_DIR.glob("*_meta.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            data = json.loads(meta_file.read_text(encoding="utf-8"))
+            data["has_video"] = (OUT_DIR / data["filename"]).exists()
+            entries.append(data)
+        except Exception:
+            pass
+    return entries
+
+
+@app.get("/library/{entry_id}/video")
+async def library_video(entry_id: str):
+    meta_file = OUT_DIR / f"{entry_id}_meta.json"
+    if not meta_file.exists():
+        raise HTTPException(status_code=404, detail="Entry not found")
+    data = json.loads(meta_file.read_text(encoding="utf-8"))
+    video_path = OUT_DIR / data["filename"]
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail="Video file not found")
+    return FileResponse(str(video_path), media_type="video/mp4", filename=video_path.name)
+
+
+@app.patch("/library/{entry_id}")
+async def library_patch(entry_id: str, patch: LibraryPatch):
+    meta_file = OUT_DIR / f"{entry_id}_meta.json"
+    if not meta_file.exists():
+        raise HTTPException(status_code=404, detail="Entry not found")
+    data = json.loads(meta_file.read_text(encoding="utf-8"))
+    data["published"] = patch.published
+    meta_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return data
+
+
+@app.delete("/library/{entry_id}")
+async def library_delete(entry_id: str):
+    meta_file = OUT_DIR / f"{entry_id}_meta.json"
+    if not meta_file.exists():
+        raise HTTPException(status_code=404, detail="Entry not found")
+    data = json.loads(meta_file.read_text(encoding="utf-8"))
+    video_path = OUT_DIR / data["filename"]
+    if video_path.exists():
+        video_path.unlink()
+    meta_file.unlink()
+    return {"ok": True}
+
+
+@app.get("/library/{entry_id}/download")
+async def library_download(entry_id: str):
+    meta_file = OUT_DIR / f"{entry_id}_meta.json"
+    if not meta_file.exists():
+        raise HTTPException(status_code=404, detail="Entry not found")
+    data = json.loads(meta_file.read_text(encoding="utf-8"))
+    video_path = OUT_DIR / data["filename"]
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail="Video file not found")
+
+    title = data.get("title", "")
+    description = data.get("description", "")
+    hashtags = " ".join(data.get("hashtags", []))
+    txt_content = (
+        f"TITLE\n{'─' * 60}\n{title}\n\n"
+        f"DESCRIPTION\n{'─' * 60}\n{description}\n\n"
+        f"HASHTAGS\n{'─' * 60}\n{hashtags}\n"
+    )
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(video_path, video_path.name)
+        zf.writestr(video_path.stem + "_description.txt", txt_content)
+    buf.seek(0)
+
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{video_path.stem}.zip"'},
     )
 
 

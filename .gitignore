@@ -18,6 +18,7 @@ out/
 remotion/props.json
 remotion/node_modules/
 remotion/dist/
+remotion/public/
 
 # OS
 .DS_Store
